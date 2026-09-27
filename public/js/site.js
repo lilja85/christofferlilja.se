@@ -18,10 +18,16 @@
   }
   function updateLabel() {
     if (!toggle) return;
-    toggle.setAttribute('aria-label', currentTheme() === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema');
+    var label = root.classList.contains('sudo')
+      ? 'Avsluta sudo och lämna tillbaka behörigheten'
+      : currentTheme() === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema';
+    toggle.setAttribute('aria-label', label);
+    toggle.title = root.classList.contains('sudo') ? 'Avsluta sudo' : 'Byt tema';
   }
   if (toggle) {
     toggle.addEventListener('click', function () {
+      // I sudo-läget är knappen ett hänglås som avslutar förhöjningen
+      if (root.classList.contains('sudo')) { expireSudo('button'); return; }
       // Från 2008-läget går knappen tillbaka till nutiden
       if (root.dataset.theme === '2008') setTheme(darkQuery.matches ? 'dark' : 'light');
       else setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
@@ -68,6 +74,7 @@
       return;
     }
     root.classList.add('sudo');
+    updateLabel();
     var left = SUDO_SECONDS;
     toast('[PIM] Rollen "Global Nörd" aktiverad i ' + left + ' s. Motivering: "ville bara testa".', 5000);
     auditLog('[PIM] Aktivering godkänd: rollen "Global Nörd" i ' + SUDO_SECONDS + ' s. Loggad för granskning.');
@@ -78,12 +85,19 @@
     }, 1000);
     sudoTimer = setTimeout(expireSudo, SUDO_SECONDS * 1000);
   }
-  function expireSudo(early) {
+  // reason: undefined = tiden löpte ut, true = sudo -k, 'button' = hänglåsknappen
+  function expireSudo(reason) {
     clearInterval(sudoTick);
     clearTimeout(sudoTimer);
     root.classList.remove('sudo');
     stripTitle();
-    var msg = early
+    updateLabel();
+    if (reason === 'button') {
+      toast('Tack för att du minskar dina behörigheter! Least privilege när det är som bäst. 🔒🙏', 5000);
+      auditLog('[PIM] Rollen "Global Nörd" lämnades tillbaka frivilligt. Säkerhetsteamet tackar. 🙏');
+      return;
+    }
+    var msg = reason
       ? '[PIM] Aktiveringen avslutades i förtid. Behörigheten är återkallad.'
       : '[PIM] Aktiveringen har löpt ut. Behörigheten är återkallad.';
     toast(msg + ' 🔒');

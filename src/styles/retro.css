@@ -63,6 +63,8 @@ html[data-theme='2008'] .theme-toggle {
 html[data-theme='2008'] .theme-toggle:active { border-style: inset; }
 html[data-theme='2008'] .theme-toggle svg { display: none !important; }
 html[data-theme='2008'] .theme-toggle::after { content: 'Tillbaka till 2026'; }
+html[data-theme='2008'].sudo .theme-toggle::after { content: 'Avsluta sudo'; }
+html[data-theme='2008'].sudo .theme-toggle { color: #000000; border-color: #dddddd; text-shadow: none; }
 
 html[data-theme='2008'] main.wrap {
   padding: 8px 40px 16px;

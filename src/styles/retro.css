@@ -260,3 +260,12 @@ html[data-theme='2008'] .retro-guestbook { display: inline; }
   html[data-theme='2008'] .site-header { background-size: auto 100%; background-position: left top; }
   html[data-theme='2008'] .site-header nav { left: 16px; }
 }
+
+/* sudo i 2008-läget: 00-talslayouten, men i terminalgrönt */
+html[data-theme='2008'].sudo body,
+html[data-theme='2008'].sudo main.wrap,
+html[data-theme='2008'].sudo .site-footer { background: var(--bg); }
+html[data-theme='2008'].sudo .focus li,
+html[data-theme='2008'].sudo .avatar { background: var(--card); border-color: var(--line); }
+html[data-theme='2008'].sudo :is(h1, h2, a, a:visited, .site-footer, .retro-updated) { color: var(--fg); }
+html[data-theme='2008'].sudo .site-header nav a { color: #ffffff; }

@@ -83,7 +83,8 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']):not([data-theme='2008']) {
+    /* :where() håller specificiteten låg så att sudo-läget (:root.sudo) vinner */
+    :root:where(:not([data-theme='light']):not([data-theme='2008'])) {
       --bg: #141517;
       --fg: #ececec;
       --muted: #a0a4ab;

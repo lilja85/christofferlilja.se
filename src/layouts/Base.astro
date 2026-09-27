@@ -1,6 +1,6 @@
 ---
 import { getImage } from 'astro:assets';
-import profil from '../assets/profil.jpg';
+import avatar from '../assets/profil-avatar.jpg';
 import { SITE } from '../site';
 
 interface Props {
@@ -10,10 +10,14 @@ interface Props {
 
 const { title, description = `${SITE.name} – ${SITE.title} i ${SITE.location}.` } = Astro.props;
 const pageTitle = title ? `${title} – ${SITE.name}` : `${SITE.name} – ${SITE.title}`;
-const ogImage = await getImage({ src: profil, width: 1200, height: 630, fit: 'cover', format: 'jpg' });
+const ogImage = await getImage({ src: avatar, width: 1200, height: 1200, format: 'jpg' });
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 <!doctype html>
+<!--
+   Hej, du som läser källkod! 👋
+   Prova ↑ ↑ ↓ ↓ ← → ← → B A, eller öppna konsolen.
+-->
 <html lang="sv">
   <head>
     <meta charset="utf-8" />
@@ -22,6 +26,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="author" href="/humans.txt" />
     <meta name="color-scheme" content="light dark" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
@@ -29,6 +34,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={new URL(ogImage.src, Astro.site)} />
     {SITE.links.map((l) => <link rel="me" href={l.href} />)}
+    <!-- Sätter temat innan sidan ritas så att den inte blinkar till i fel färg -->
+    <script is:inline src="/js/theme-init.js"></script>
+    <script is:inline src="/js/site.js" defer></script>
   </head>
   <body>
     <header class="wrap site-header">
@@ -36,16 +44,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       <nav>
         <a href="/">Om mig</a>
         <a href="/lab/">Lab</a>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Byt till mörkt tema" title="Byt tema">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" /></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z" /></svg>
+        </button>
       </nav>
     </header>
     <main class="wrap">
       <slot />
     </main>
     <footer class="wrap site-footer">
-      <p>
-        © {new Date().getFullYear()} {SITE.name}
-      </p>
+      <p>© {new Date().getFullYear()} {SITE.name}</p>
     </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </body>
 </html>
 
@@ -57,25 +68,51 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     --line: #e4e1dc;
     --accent: #1f6f5c;
     --card: #ffffff;
-    color-scheme: light dark;
+    --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme='light']) {
       --bg: #141517;
       --fg: #ececec;
       --muted: #a0a4ab;
       --line: #2c2e33;
       --accent: #5cc5a7;
       --card: #1b1c1f;
+      color-scheme: dark;
     }
   }
+  :root[data-theme='dark'] {
+    --bg: #141517;
+    --fg: #ececec;
+    --muted: #a0a4ab;
+    --line: #2c2e33;
+    --accent: #5cc5a7;
+    --card: #1b1c1f;
+    color-scheme: dark;
+  }
+  /* sudo-läge (Konami-koden): tidsbegränsad förhöjd behörighet, precis som PIM */
+  :root.sudo {
+    --bg: #020703;
+    --fg: #39ff6a;
+    --muted: #22b24a;
+    --line: #0e3a1a;
+    --accent: #9dffb6;
+    --card: #04110a;
+    --font: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    color-scheme: dark;
+  }
+  :root.sudo body { text-shadow: 0 0 6px rgb(57 255 106 / 0.35); }
+  :root.sudo img { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3); }
+
   *, *::before, *::after { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--fg);
-    font: 17px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font: 17px/1.6 var(--font);
+    transition: background-color 0.2s, color 0.2s;
   }
   a { color: var(--accent); text-underline-offset: 0.15em; }
   a:hover { text-decoration-thickness: 2px; }
@@ -86,16 +123,39 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   .wrap { max-width: 44rem; margin: 0 auto; padding: 0 16px; }
   .muted { color: var(--muted); }
   .site-header {
-    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
     padding-top: 1.5rem; padding-bottom: 1.5rem;
   }
   .brand { font-weight: 650; color: var(--fg); text-decoration: none; }
-  .site-header nav { display: flex; gap: 1.25rem; }
+  .site-header nav { display: flex; align-items: center; gap: 1.25rem; }
   .site-header nav a { color: var(--muted); text-decoration: none; }
   .site-header nav a:hover { color: var(--fg); }
+  .theme-toggle {
+    display: grid; place-items: center; width: 2.25rem; height: 2.25rem; margin: -0.5rem 0;
+    padding: 0; border: 1px solid var(--line); border-radius: 50%;
+    background: var(--card); color: var(--muted); cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--fg); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  /* Visa månen i ljust tema (klick → mörkt) och solen i mörkt tema (klick → ljust) */
+  .icon-sun { display: none; }
+  :root[data-theme='dark'] .icon-sun, :root.sudo .icon-sun { display: block; }
+  :root[data-theme='dark'] .icon-moon, :root.sudo .icon-moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .icon-sun { display: block; }
+    :root:not([data-theme='light']) .icon-moon { display: none; }
+  }
   .site-footer {
     margin-top: 4rem; padding-top: 1.5rem; padding-bottom: 2rem;
     border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem;
   }
   .site-footer a { color: inherit; }
+  .toast {
+    position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+    max-width: calc(100% - 32px); padding: 0.75rem 1rem;
+    background: var(--card); color: var(--fg); border: 1px solid var(--accent); border-radius: 8px;
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.9rem;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+  }
 </style>

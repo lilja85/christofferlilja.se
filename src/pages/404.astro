@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="404" description="Sidan finns inte.">
+  <h1>404</h1>
+  <pre><code>$ curl -I {'<'}den här sidan{'>'}
+HTTP/2 404
+x-reason: sidan finns inte (och det är inte ett behörighetsproblem, jag lovar)
+x-suggestion: kontrollera stavningen eller gå till startsidan</code></pre>
+  <p><a href="/">← Till startsidan</a></p>
+</Base>

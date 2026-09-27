@@ -1,0 +1,6 @@
+# Hittat en sårbarhet på christofferlilja.se? Tack! Hör av dig så fixar jag det.
+# Det här är en statisk sida utan backend, men man vet aldrig. 😉
+Contact: mailto:christoffer.lilja@gmail.com
+Expires: 2027-09-27T00:00:00.000Z
+Preferred-Languages: sv, en
+Canonical: https://christofferlilja.se/.well-known/security.txt

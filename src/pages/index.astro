@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import profil from '../assets/profil.jpg';
+import avatar from '../assets/profil-avatar.jpg';
 import { SITE, formatDate } from '../site';
 
 // CV-länken visas bara när PDF:en faktiskt finns i public/cv/
@@ -17,7 +17,7 @@ const posts = (await getCollection('lab', ({ data }) => !data.draft))
 const focus = [
   { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies, GitHub Advanced Security och CodeQL.' },
   { title: 'Infrastruktur som kod', text: 'Terraform och Bicep, pipelines som låter teamen behålla sin fart.' },
-  { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, AKS, Functions och Well-Architected.' },
+  { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, AKS och Functions. Lösningar som utvärderas mot Well-Architected Framework.' },
   { title: 'IAM/IGA', text: 'Behörighetshantering, least privilege och segregation of duties.' },
 ];
 
@@ -25,7 +25,7 @@ const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
 ---
 <Base>
   <section class="hero">
-    <Image src={profil} alt="Christoffer Lilja" width={320} height={320} fit="cover" class="avatar" loading="eager" />
+    <Image src={avatar} alt="Christoffer Lilja" width={320} height={320} fit="cover" class="avatar" loading="eager" />
     <div>
       <h1>Christoffer Lilja</h1>
       <p class="lead">{SITE.title}. Konsult på Consid i {SITE.location}.</p>
@@ -80,7 +80,7 @@ const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
     display: grid; grid-template-columns: 160px 1fr; gap: 1.5rem; align-items: center;
     margin: 1rem 0 2rem;
   }
-  .avatar { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; }
+  .avatar { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; }
   h1 { font-size: 2.1rem; margin: 0; }
   .lead { margin: 0.25rem 0 0.75rem; color: var(--muted); font-size: 1.1rem; }
   .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 0; }

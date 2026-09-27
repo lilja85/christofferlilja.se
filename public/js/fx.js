@@ -272,7 +272,7 @@
         msg.textContent = 'Skickar till chefen ...';
         setTimeout(function () {
           msg.textContent = 'Godkänd av chefen (utan att läsa motiveringen). Precis som vanligt. ✅';
-          setTimeout(done, 1600);
+          setTimeout(done, 4500);
         }, 1400);
       });
       el.querySelector('.fx-row').appendChild(esc);

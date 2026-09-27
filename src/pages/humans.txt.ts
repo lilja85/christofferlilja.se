@@ -1,4 +1,7 @@
-/* TEAM */
+import { textResponse } from '../lib/text';
+
+export const GET = () =>
+  textResponse(`/* TEAM */
 Utvecklare: Christoffer Lilja
 Roll: DevSecOps & lösningsarkitektur
 Ort: Jönköping, Sverige
@@ -13,4 +16,5 @@ Byggd med: Astro, HTML, CSS och lite vanilla-JS
 Publicerad med: Cloudflare Pages
 Kakor: inga
 Spårning: ingen
-Påskägg: ja
+Påskägg: ja (tips: tryck "." på sidan)
+`);

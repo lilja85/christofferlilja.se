@@ -22,7 +22,7 @@
       ? 'Avsluta sudo och lämna tillbaka behörigheten'
       : currentTheme() === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema';
     toggle.setAttribute('aria-label', label);
-    toggle.title = root.classList.contains('sudo') ? 'Avsluta sudo' : 'Byt tema';
+    toggle.title = root.classList.contains('sudo') ? 'Lås igen (avsluta sudo)' : 'Byt tema';
   }
   if (toggle) {
     toggle.addEventListener('click', function () {

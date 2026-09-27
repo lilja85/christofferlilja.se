@@ -57,7 +57,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Byt till mörkt tema" title="Byt tema">
           <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" /></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z" /></svg>
-          <svg class="icon-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2.5" /></svg>
+          <svg class="icon-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 7.75-1.4M12 14.5v2.5" /></svg>
         </button>
       </nav>
     </header>
@@ -159,7 +159,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     :root:not([data-theme='light']):not([data-theme='2008']) .icon-sun { display: block; }
     :root:not([data-theme='light']):not([data-theme='2008']) .icon-moon { display: none; }
   }
-  /* I sudo-läget blir knappen ett hänglås som avslutar förhöjningen */
+  /* I sudo-läget blir knappen ett öppet hänglås: klick låser (avslutar förhöjningen) */
   .icon-lock { display: none; }
   :root.sudo .theme-toggle .icon-sun, :root.sudo .theme-toggle .icon-moon { display: none; }
   :root.sudo .theme-toggle .icon-lock { display: block; }

@@ -1,0 +1,100 @@
+---
+import fs from 'node:fs';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import profil from '../assets/profil.jpg';
+import { SITE, formatDate } from '../site';
+
+// CV-länken visas bara när PDF:en faktiskt finns i public/cv/
+const cvPath = '/cv/Christoffer_Lilja-CV.pdf';
+const hasCv = fs.existsSync(new URL(`../../public${cvPath}`, import.meta.url));
+
+const posts = (await getCollection('lab', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const focus = [
+  { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies, GitHub Advanced Security och CodeQL.' },
+  { title: 'Infrastruktur som kod', text: 'Terraform och Bicep, pipelines som låter teamen behålla sin fart.' },
+  { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, AKS, Functions och Well-Architected.' },
+  { title: 'IAM/IGA', text: 'Behörighetshantering, least privilege och segregation of duties.' },
+];
+
+const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
+---
+<Base>
+  <section class="hero">
+    <Image src={profil} alt="Christoffer Lilja" width={320} height={320} fit="cover" class="avatar" loading="eager" />
+    <div>
+      <h1>Christoffer Lilja</h1>
+      <p class="lead">{SITE.title}. Konsult på Consid i {SITE.location}.</p>
+      <p class="links">
+        {SITE.links.map((l) => <a href={l.href} rel="me">{l.label}</a>)}
+        <a href={`mailto:${SITE.email}`}>E-post</a>
+        {hasCv && <a href={cvPath}>CV (PDF)</a>}
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <p>
+      Jag har jobbat som .NET-utvecklare sedan 2007. De senaste åren har jag
+      mest arbetat med utvecklings- och leveranskedjan, med fokus på säkerhet. Just nu arbetar
+      jag med behörighetshantering (IAM/IGA) i OpenText.
+    </p>
+    <p>
+      Utvecklarbakgrunden gör att jag förstår varför team ibland går runt säkerheten. Därför
+      bygger jag hellre lösningar som teamen faktiskt vill använda än regler de måste följa.
+    </p>
+  </section>
+
+  <section>
+    <h2>Det här jobbar jag med</h2>
+    <ul class="focus">
+      {focus.map((f) => <li><strong>{f.title}</strong><span>{f.text}</span></li>)}
+    </ul>
+    <p class="muted">
+      Uppdrag i urval: {clients.join(' · ')}. Fullständig historik finns på <a href={SITE.links[0].href}>LinkedIn</a>.
+    </p>
+  </section>
+
+  {posts.length > 0 && (
+    <section>
+      <h2>Senast i labbet</h2>
+      <ul class="posts">
+        {posts.map((p) => (
+          <li>
+            <a href={`/lab/${p.id}/`}>{p.data.title}</a>
+            <time class="muted" datetime={p.data.date.toISOString()}>{formatDate(p.data.date)}</time>
+          </li>
+        ))}
+      </ul>
+      <p><a href="/lab/">Alla anteckningar →</a></p>
+    </section>
+  )}
+</Base>
+
+<style>
+  .hero {
+    display: grid; grid-template-columns: 160px 1fr; gap: 1.5rem; align-items: center;
+    margin: 1rem 0 2rem;
+  }
+  .avatar { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; }
+  h1 { font-size: 2.1rem; margin: 0; }
+  .lead { margin: 0.25rem 0 0.75rem; color: var(--muted); font-size: 1.1rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 0; }
+  .focus { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .focus li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; }
+  .focus strong { display: block; }
+  .focus span { color: var(--muted); font-size: 0.95rem; }
+  .posts { list-style: none; padding: 0; }
+  .posts li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--line); }
+  .posts time { white-space: nowrap; font-size: 0.9rem; }
+  @media (max-width: 560px) {
+    .hero { grid-template-columns: 1fr; }
+    .avatar { width: 120px; height: 120px; }
+    .focus { grid-template-columns: 1fr; }
+    .posts li { flex-direction: column; gap: 0; }
+  }
+</style>

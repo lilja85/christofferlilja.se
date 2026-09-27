@@ -1,0 +1,102 @@
+---
+import { getImage } from 'astro:assets';
+import profil from '../assets/profil.jpg';
+import { SITE } from '../site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = `${SITE.name} – ${SITE.title} i ${SITE.location}.` } = Astro.props;
+const pageTitle = title ? `${title} – ${SITE.name}` : `${SITE.name} – ${SITE.title}`;
+const ogImage = await getImage({ src: profil, width: 1200, height: 630, fit: 'cover', format: 'jpg' });
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(ogImage.src, Astro.site)} />
+    {SITE.links.map((l) => <link rel="me" href={l.href} />)}
+  </head>
+  <body>
+    <header class="wrap site-header">
+      <a href="/" class="brand">{SITE.name}</a>
+      <nav>
+        <a href="/">Om mig</a>
+        <a href="/lab/">Lab</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <slot />
+    </main>
+    <footer class="wrap site-footer">
+      <p>
+        © {new Date().getFullYear()} {SITE.name} ·
+        <a href="/arkiv/2008/">Så här såg sidan ut 2008</a>
+      </p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #fbfaf8;
+    --fg: #1d1d1f;
+    --muted: #5f6368;
+    --line: #e4e1dc;
+    --accent: #1f6f5c;
+    --card: #ffffff;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141517;
+      --fg: #ececec;
+      --muted: #a0a4ab;
+      --line: #2c2e33;
+      --accent: #5cc5a7;
+      --card: #1b1c1f;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  a { color: var(--accent); text-underline-offset: 0.15em; }
+  a:hover { text-decoration-thickness: 2px; }
+  h1, h2, h3 { line-height: 1.25; text-wrap: balance; }
+  img { max-width: 100%; height: auto; }
+  code, pre { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.9em; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; overflow-x: auto; }
+  .wrap { max-width: 44rem; margin: 0 auto; padding: 0 16px; }
+  .muted { color: var(--muted); }
+  .site-header {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding-top: 1.5rem; padding-bottom: 1.5rem;
+  }
+  .brand { font-weight: 650; color: var(--fg); text-decoration: none; }
+  .site-header nav { display: flex; gap: 1.25rem; }
+  .site-header nav a { color: var(--muted); text-decoration: none; }
+  .site-header nav a:hover { color: var(--fg); }
+  .site-footer {
+    margin-top: 4rem; padding-top: 1.5rem; padding-bottom: 2rem;
+    border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem;
+  }
+  .site-footer a { color: inherit; }
+</style>

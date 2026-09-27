@@ -3,6 +3,7 @@ import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import avatar from '../assets/profil-avatar.jpg';
 import { SITE } from '../site';
+import '../styles/retro.css';
 
 interface Props {
   title?: string;
@@ -43,6 +44,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     <!-- Sätter temat innan sidan ritas så att den inte blinkar till i fel färg -->
     <script is:inline src="/js/theme-init.js"></script>
     <script is:inline src="/js/site.js" defer></script>
+    <script is:inline src="/js/retro.js" defer></script>
   </head>
   <body>
     <header class="wrap site-header">
@@ -79,7 +81,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
+    :root:not([data-theme='light']):not([data-theme='2008']) {
       --bg: #141517;
       --fg: #ececec;
       --muted: #a0a4ab;
@@ -150,8 +152,8 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
   :root[data-theme='dark'] .icon-sun, :root.sudo .icon-sun { display: block; }
   :root[data-theme='dark'] .icon-moon, :root.sudo .icon-moon { display: none; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) .icon-sun { display: block; }
-    :root:not([data-theme='light']) .icon-moon { display: none; }
+    :root:not([data-theme='light']):not([data-theme='2008']) .icon-sun { display: block; }
+    :root:not([data-theme='light']):not([data-theme='2008']) .icon-moon { display: none; }
   }
   .site-footer {
     margin-top: 4rem; padding-top: 1.5rem; padding-bottom: 2rem;

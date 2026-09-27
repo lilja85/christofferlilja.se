@@ -6,12 +6,15 @@
   var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
   function currentTheme() {
-    return root.dataset.theme || (darkQuery.matches ? 'dark' : 'light');
+    var t = root.dataset.theme;
+    if (t === 'light' || t === 'dark') return t;
+    return darkQuery.matches ? 'dark' : 'light';
   }
   function setTheme(theme) {
     root.dataset.theme = theme;
     try { localStorage.setItem('theme', theme); } catch (e) {}
     updateLabel();
+    document.dispatchEvent(new CustomEvent('themechange', { detail: theme }));
   }
   function updateLabel() {
     if (!toggle) return;
@@ -19,7 +22,9 @@
   }
   if (toggle) {
     toggle.addEventListener('click', function () {
-      setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+      // Från 2008-läget går knappen tillbaka till nutiden
+      if (root.dataset.theme === '2008') setTheme(darkQuery.matches ? 'dark' : 'light');
+      else setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
     });
     darkQuery.addEventListener('change', updateLabel);
     updateLabel();
@@ -180,7 +185,7 @@
         print('  ls [lab]      lista innehåll');
         print('  cat <fil>     visa en fil (prova about.txt)');
         print('  open <mål>    linkedin, lab, security, humans');
-        print('  theme <val>   light | dark');
+        print('  theme <val>   light | dark | 2008');
         print('  sudo [-k]     tidsbegränsad förhöjd behörighet (-k avslutar)');
         print('  history, date, uname, clear, exit');
       },
@@ -226,7 +231,8 @@
       },
       theme: function (args) {
         if (args[0] === 'light' || args[0] === 'dark') { setTheme(args[0]); print('Tema: ' + args[0]); }
-        else print('Användning: theme light | theme dark', 'err');
+        else if (args[0] === '2008') { setTheme('2008'); print('Spolar tillbaka till 2008 ... Kom ihåg att ringa upp modemet. 📞', 'log'); }
+        else print('Användning: theme light | dark | 2008', 'err');
       },
       sudo: function (args) {
         if (args[0] === 'rm') { commands.rm(args.slice(1)); return; }

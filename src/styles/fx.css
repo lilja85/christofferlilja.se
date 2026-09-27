@@ -159,3 +159,70 @@
 
 /* Tomma rader i terminalen ska synas */
 .term-out > div:empty { min-height: 1.5em; }
+
+/* ---- Merge-konflikt -------------------------------------------------------- */
+.fx-scope-light { --bg: #fbfaf8; --fg: #1d1d1f; --muted: #5f6368; --line: #e4e1dc; --accent: #1f6f5c; --card: #ffffff; }
+.fx-scope-dark { --bg: #141517; --fg: #ececec; --muted: #a0a4ab; --line: #2c2e33; --accent: #5cc5a7; --card: #1b1c1f; }
+.fx-scope-gray { --bg: #6b6d70; --fg: #f4f4f4; --muted: #dcdde0; --line: #85878b; --accent: #ffe27a; --card: #75777b; }
+
+.fx-conflict { z-index: 150; }
+/* Klonen är bara en bild: klick fångas av överlägget så att sidan bakom inte går att använda */
+.fx-conflict-other, .fx-conflict-seam, .fx-conflict-mid, .fx-conflict-marker { pointer-events: none; }
+.fx-conflict-other {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.6 var(--font);
+}
+.fx-conflict-seam { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fx-conflict-seam line { stroke: #e5c07b; stroke-width: 3; stroke-dasharray: 10 6; }
+.fx-conflict-mid,
+.fx-conflict-marker {
+  position: absolute;
+  padding: 0.2rem 0.6rem;
+  font: 700 14px/1.4 ui-monospace, 'Cascadia Code', Consolas, monospace;
+  color: #ffffff;
+  white-space: nowrap;
+  text-shadow: none;
+}
+.fx-conflict-mid { left: 50%; top: 50%; background: #3c3c3c; }
+.fx-conflict-current { left: 16px; top: 16px; background: #2f7a4d; }
+.fx-conflict-incoming { right: 16px; bottom: 16px; background: #1f5f99; }
+.fx-conflict-bar {
+  position: absolute;
+  left: 50%;
+  top: 25%;
+  transform: translateX(-50%);
+  width: min(38rem, calc(100% - 32px));
+  padding: 0.9rem 1rem;
+  pointer-events: auto;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border: 1px solid #454545;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgb(0 0 0 / 0.45);
+  font: 14px/1.5 ui-monospace, 'Cascadia Code', Consolas, monospace;
+  text-shadow: none;
+}
+.fx-conflict-bar strong { color: #f48771; }
+.fx-conflict-lens { margin-top: 0.4rem; color: #858585; font: 12px/1.6 'Segoe UI', system-ui, sans-serif; }
+.fx-conflict-lens button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #cccccc;
+  font: inherit;
+  cursor: pointer;
+}
+.fx-conflict-lens button:hover { color: #3794ff; text-decoration: underline; }
+.fx-conflict-lens button:focus-visible { outline: 1px solid #3794ff; outline-offset: 2px; }
+.fx-conflict-msg { margin: 0.5rem 0 0; white-space: pre-line; color: #b5cea8; min-height: 0; }
+.fx-conflict-msg:empty { display: none; }
+
+@media (max-width: 560px) {
+  .fx-conflict-mid { display: none; }
+  .fx-conflict-marker { font-size: 11px; white-space: normal; max-width: calc(100% - 32px); }
+}

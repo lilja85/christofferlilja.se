@@ -104,6 +104,16 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     --card: #1b1c1f;
     color-scheme: dark;
   }
+  /* "Accept Both" i merge-konflikten: ljust + mörkt = grått */
+  :root[data-theme='gray'] {
+    --bg: #6b6d70;
+    --fg: #f4f4f4;
+    --muted: #dcdde0;
+    --line: #85878b;
+    --accent: #ffe27a;
+    --card: #75777b;
+    color-scheme: dark;
+  }
   /* sudo-läge (Konami-koden): tidsbegränsad förhöjd behörighet, precis som PIM */
   :root.sudo {
     --bg: #020703;
@@ -159,6 +169,15 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     :root:not([data-theme='light']):not([data-theme='2008']) .icon-sun { display: block; }
     :root:not([data-theme='light']):not([data-theme='2008']) .icon-moon { display: none; }
   }
+  /* Rate limiting: knappen tonas ner och visar Retry-After i en bricka */
+  .theme-toggle.rate-limited { position: relative; opacity: 0.6; cursor: not-allowed; }
+  .theme-toggle.rate-limited::after {
+    content: attr(data-retry);
+    position: absolute; top: -0.45rem; right: -0.45rem;
+    min-width: 1.15rem; height: 1.15rem; padding: 0 0.2rem;
+    border-radius: 999px; background: #d93025; color: #ffffff;
+    font: 700 0.7rem/1.15rem system-ui, sans-serif; text-align: center;
+  }
   /* I sudo-läget blir knappen ett öppet hänglås: klick låser (avslutar förhöjningen) */
   .icon-lock { display: none; }
   :root.sudo .theme-toggle .icon-sun, :root.sudo .theme-toggle .icon-moon { display: none; }
@@ -175,6 +194,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     background: var(--card); color: var(--fg); border: 1px solid var(--accent); border-radius: 8px;
     font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.9rem;
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+    white-space: pre-line;
   }
   .term {
     position: fixed; inset: auto 0 0 0; z-index: 50;

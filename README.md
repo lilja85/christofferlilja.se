@@ -30,5 +30,6 @@ Lägg sedan till `christofferlilja.se` och `www.christofferlilja.se` under Custo
 ## Påskägg
 
 Tryck `.` (eller tangenten under Esc) för terminalen, och kör `help` och `sudo -l`.
+Temaknappen är rate limitad (3 byten/10 s), och två flikar som byter tema samtidigt ger en merge-konflikt (även `git pull`).
 Koden finns i `public/js/site.js` (terminal, tema, PIM), `public/js/fx.js` (krasch, blåskärm, vim, säkerhetskontroll)
 och `public/js/retro.js` (`theme 2008`), med stilar i `src/styles/`.

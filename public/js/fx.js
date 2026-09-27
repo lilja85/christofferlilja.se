@@ -335,6 +335,65 @@
     });
   }
 
+  // --- Merge-konflikt: sidan delas diagonalt mellan två teman -----------------
+  // Den inkommande versionen är en klon av sidan i det andra temat, klippt till en triangel.
+  var THEME_NAMES = { light: 'light', dark: 'dark', gray: 'gray' };
+
+  function conflict(opts, onResolve) {
+    root.dataset.fx = 'busy';
+    var scrollY = window.scrollY;
+    var o = overlay('fx-conflict');
+
+    var other = document.createElement('div');
+    other.className = 'fx-conflict-other fx-scope-' + opts.incoming;
+    var inner = document.createElement('div');
+    inner.className = 'fx-conflict-inner';
+    Array.prototype.forEach.call(document.body.children, function (child) {
+      if (child.matches('script, .term, .toast, .fx-overlay')) return;
+      inner.appendChild(child.cloneNode(true));
+    });
+    inner.querySelectorAll('[id]').forEach(function (e) { e.removeAttribute('id'); });
+    inner.querySelectorAll('script').forEach(function (e) { e.remove(); });
+    inner.setAttribute('aria-hidden', 'true');
+    inner.style.transform = 'translateY(' + -scrollY + 'px)';
+    other.appendChild(inner);
+    o.appendChild(other);
+
+    var angle = -Math.atan2(window.innerHeight, window.innerWidth) * 180 / Math.PI;
+    o.insertAdjacentHTML('beforeend',
+      '<svg class="fx-conflict-seam" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' +
+      '<line x1="100" y1="0" x2="0" y2="100" vector-effect="non-scaling-stroke" /></svg>' +
+      '<div class="fx-conflict-mid" style="transform: translate(-50%, -50%) rotate(' + angle + 'deg)">=======</div>' +
+      '<div class="fx-conflict-marker fx-conflict-current">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD (den här fliken: ' + THEME_NAMES[opts.current] + ')</div>' +
+      '<div class="fx-conflict-marker fx-conflict-incoming">&gt;&gt;&gt;&gt;&gt;&gt;&gt; ' + opts.incomingLabel + ' (' + THEME_NAMES[opts.incoming] + ')</div>' +
+      '<div class="fx-conflict-bar" role="dialog" aria-modal="true" aria-label="Merge-konflikt i temat">' +
+      '<strong>CONFLICT (content): Merge conflict in theme</strong>' +
+      '<div class="fx-conflict-lens">' +
+      '<button type="button" data-c="current">Accept Current Change</button> | ' +
+      '<button type="button" data-c="incoming">Accept Incoming Change</button> | ' +
+      '<button type="button" data-c="both">Accept Both Changes</button> | ' +
+      '<button type="button" data-c="compare">Compare Changes</button>' +
+      '</div><p class="fx-conflict-msg" aria-live="polite"></p></div>');
+
+    var msg = o.querySelector('.fx-conflict-msg');
+    document.body.style.overflow = 'hidden';
+    o.querySelector('.fx-conflict-lens button').focus();
+
+    o.querySelectorAll('.fx-conflict-lens button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var c = b.dataset.c;
+        if (c === 'compare') {
+          msg.textContent = 'diff --git a/theme b/theme\n-' + opts.current + '\n+' + opts.incoming + '\nEn rad. Det är hela skillnaden. Ingen av er har rätt.';
+          return;
+        }
+        o.remove();
+        document.body.style.overflow = '';
+        delete root.dataset.fx;
+        onResolve(c);
+      });
+    });
+  }
+
   // Efter omladdningen från en krasch
   function afterLoad(log) {
     if (session('after-crash') === '1') {
@@ -354,6 +413,7 @@
     isLocked: isLocked,
     lockout: lockout,
     vim: vim,
+    conflict: conflict,
     afterLoad: afterLoad
   };
 })();

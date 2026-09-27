@@ -271,3 +271,10 @@ html[data-theme='2008'].sudo .focus li,
 html[data-theme='2008'].sudo .avatar { background: var(--card); border-color: var(--line); }
 html[data-theme='2008'].sudo :is(h1, h2, a, a:visited, .site-footer, .retro-updated) { color: var(--fg); }
 html[data-theme='2008'].sudo .site-header nav a { color: #ffffff; }
+
+/* Rate limiting i 2008-läget */
+html[data-theme='2008'] .theme-toggle.rate-limited::after {
+  content: 'Retry-After: ' attr(data-retry) ' s';
+  position: static; min-width: 0; height: auto; padding: 0;
+  background: none; color: #000000; border-radius: 0; font: 11px Tahoma, Verdana, sans-serif;
+}

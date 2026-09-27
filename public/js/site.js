@@ -7,12 +7,27 @@
 
   function currentTheme() {
     var t = root.dataset.theme;
-    if (t === 'light' || t === 'dark') return t;
+    if (t === 'light' || t === 'dark' || t === 'gray') return t;
     return darkQuery.matches ? 'dark' : 'light';
   }
-  function setTheme(theme) {
+
+  // Temat delas mellan flikar via localStorage. theme-meta berättar vem som skrev och när,
+  // så att en flik kan upptäcka en samtidig ändring i en annan flik (se storage-lyssnaren nedan).
+  var tabId = Math.random().toString(36).slice(2);
+  var lastLocalChange = 0;
+
+  // opts.remote: ändringen kom från en annan flik och ska inte skrivas tillbaka
+  // opts.resolved: skrivs som resultat av en löst konflikt och ska inte trigga nya konflikter
+  function setTheme(theme, opts) {
+    opts = opts || {};
     root.dataset.theme = theme;
-    try { localStorage.setItem('theme', theme); } catch (e) {}
+    if (!opts.remote) {
+      lastLocalChange = Date.now();
+      try {
+        localStorage.setItem('theme-meta', JSON.stringify({ tab: tabId, t: lastLocalChange, resolved: !!opts.resolved }));
+        localStorage.setItem('theme', theme);
+      } catch (e) {}
+    }
     updateLabel();
     document.dispatchEvent(new CustomEvent('themechange', { detail: theme }));
   }
@@ -20,14 +35,82 @@
     if (!toggle) return;
     var label = root.classList.contains('sudo')
       ? 'Avsluta sudo och lämna tillbaka behörigheten'
+      : rateLimited() ? 'Rate limited. Försök igen om ' + toggle.dataset.retry + ' s'
       : currentTheme() === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema';
     toggle.setAttribute('aria-label', label);
     toggle.title = root.classList.contains('sudo') ? 'Lås igen (avsluta sudo)' : 'Byt tema';
   }
+
+  // --- Påskägg: rate limiting på temaknappen ------------------------------
+  // Max 3 byten per 10 s. Den som ignorerar Retry-After trappas upp till WAF och sedan Sentinel.
+  // (Det är också god tillgänglighet: WCAG 2.3.1 säger högst tre blinkningar per sekund.)
+  var RATE_LIMIT = 3;
+  var RATE_WINDOW = 10000;
+  var flips = [];
+  var blockedUntil = 0;
+  var strikes = 0;
+  var retryTimer;
+
+  function rateLimited() {
+    return Date.now() < blockedUntil;
+  }
+  function block(seconds) {
+    blockedUntil = Date.now() + seconds * 1000;
+    toggle.classList.add('rate-limited');
+    clearInterval(retryTimer);
+    function update() {
+      var left = Math.ceil((blockedUntil - Date.now()) / 1000);
+      if (left > 0) {
+        toggle.dataset.retry = left;
+        updateLabel();
+        return;
+      }
+      clearInterval(retryTimer);
+      toggle.classList.remove('rate-limited');
+      delete toggle.dataset.retry;
+      flips = [];
+      strikes = 0;
+      updateLabel();
+      toast('Rate limit återställd. Byt tema med måtta. 🙂');
+      auditLog('[RATE LIMIT] Kvoten återställd. Klienten är släppt.');
+    }
+    update();
+    retryTimer = setInterval(update, 250);
+  }
+  function onBlockedClick() {
+    strikes++;
+    if (strikes === 3) {
+      block(20);
+      toast('[WAF] OWASP CRS-regel 912120 utlöst: misstänkt DoS-attack mot temaknappen.\nKlienten övervakas. Retry-After förlängd till 20 s.', 6000);
+      auditLog('[WAF] Regel 912120 (Denial of Service) utlöst av temaknappen. Retry-After: 20');
+    } else if (strikes === 6) {
+      block(30);
+      toast('[SENTINEL] Incident #4711 skapad.\nAllvarlighetsgrad: Låg · MITRE ATT&CK T1499 Endpoint Denial of Service (mot dina ögon)\nTilldelad: Christoffer · Retry-After: 30 s', 8000);
+      auditLog('[SENTINEL] Incident #4711: upprepade temabyten trots 429. Taktik: T1499 Endpoint DoS. Tilldelad: Christoffer.');
+    } else {
+      var left = toggle.dataset.retry;
+      toast(strikes < 3
+        ? '429 Too Many Requests. Retry-After: ' + left + ' s. Läs headern! 😉'
+        : '429 igen. Klienter som ignorerar Retry-After brukar hamna i en logg. Retry-After: ' + left + ' s', 3500);
+    }
+  }
+
   if (toggle) {
     toggle.addEventListener('click', function () {
       // I sudo-läget är knappen ett hänglås som avslutar förhöjningen
       if (root.classList.contains('sudo')) { expireSudo('button'); return; }
+      if (rateLimited()) { onBlockedClick(); return; }
+
+      var now = Date.now();
+      flips = flips.filter(function (t) { return now - t < RATE_WINDOW; });
+      if (flips.length >= RATE_LIMIT) {
+        block(10);
+        toast('429 Too Many Requests · Retry-After: 10 s\nTemabyten är begränsade till ' + RATE_LIMIT + ' per 10 sekunder för att skydda mot brute force-attacker mot mörkerseendet. (Och ja, WCAG 2.3.1 håller med.)', 7000);
+        auditLog('[RATE LIMIT] 429 Too Many Requests: fler än ' + RATE_LIMIT + ' temabyten på 10 s. Retry-After: 10');
+        return;
+      }
+      flips.push(now);
+
       // Från 2008-läget går knappen tillbaka till nutiden
       if (root.dataset.theme === '2008') setTheme(darkQuery.matches ? 'dark' : 'light');
       else setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
@@ -35,6 +118,43 @@
     darkQuery.addEventListener('change', updateLabel);
     updateLabel();
   }
+
+  // --- Påskägg: merge-konflikt när två flikar ändrar temat samtidigt ----------
+  var CONFLICT_WINDOW = 30000;
+  function conflictable(t) {
+    return t === 'light' || t === 'dark' || t === 'gray';
+  }
+  function mergeConflict(current, incoming, incomingLabel) {
+    return new Promise(function (resolve) {
+      window.Fx.conflict({ current: current, incoming: incoming, incomingLabel: incomingLabel }, function (choice) {
+        if (choice === 'current') {
+          setTheme(current, { resolved: true });
+          toast('Konflikten löst: din ändring vann. Den andra sidan får leva med det.');
+        } else if (choice === 'incoming') {
+          setTheme(incoming, { resolved: true });
+          toast('Konflikten löst: du accepterade den inkommande ändringen. Väldigt diplomatiskt.');
+        } else {
+          setTheme('gray', { resolved: true });
+          toast('Accept Both: ljust + mörkt = grått. Ingen blev nöjd. Precis som en riktig kompromiss.', 6000);
+        }
+        auditLog('[GIT] Merge-konflikt i theme löst (' + choice + '). Commit: "fix: resolve theme conflict"');
+        resolve();
+      });
+    });
+  }
+  window.addEventListener('storage', function (e) {
+    if (e.key !== 'theme' || !e.newValue) return;
+    var meta = {};
+    try { meta = JSON.parse(localStorage.getItem('theme-meta') || '{}'); } catch (err) {}
+    var mine = root.dataset.theme === '2008' ? '2008' : currentTheme();
+    if (e.newValue === mine) return;
+    var recent = Date.now() - lastLocalChange < CONFLICT_WINDOW;
+    if (recent && !meta.resolved && !root.dataset.fx && window.Fx && conflictable(mine) && conflictable(e.newValue)) {
+      mergeConflict(mine, e.newValue, 'annan flik');
+    } else {
+      setTheme(e.newValue, { remote: true });
+    }
+  });
 
   // --- Toast --------------------------------------------------------------
   var toastEl = document.getElementById('toast');
@@ -404,6 +524,7 @@
         print('  open <mål>    linkedin, lab, security, humans');
         print('  theme <val>   light | dark | 2008');
         print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
+        print('  git <kmd>     status | pull | merge <light|dark> | push | blame');
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
@@ -452,6 +573,45 @@
         else print('Användning: theme light | dark | 2008', 'err');
       },
       sudo: sudoCmd,
+      git: function (args) {
+        var sub = args[0] || '';
+        var current = root.dataset.theme === '2008' ? '2008' : currentTheme();
+        if (sub === 'status') {
+          print('On branch main');
+          print("Your branch is up to date with 'origin/main'.");
+          print('');
+          print('nothing to commit, working tree clean');
+          print('(tips: temat delas mellan flikar. Vad händer om två flikar ändrar det samtidigt? 🤔)', 'dim');
+          return;
+        }
+        if (sub === 'merge' || sub === 'pull') {
+          var incoming = sub === 'pull' ? (current === 'dark' ? 'light' : 'dark') : (args[1] || '');
+          if (sub === 'merge' && !incoming) { print('fatal: No remote for the current branch.', 'err'); return; }
+          if (incoming === '2008' || current === '2008') { print('fatal: refusing to merge unrelated histories', 'err'); return; }
+          if (!conflictable(incoming)) { print('merge: ' + incoming + ' - not something we can merge', 'err'); return; }
+          if (incoming === current) { print('Already up to date.'); return; }
+          print('Auto-merging theme');
+          print('CONFLICT (content): Merge conflict in theme', 'err');
+          print('Automatic merge failed; fix conflicts and then commit the result.', 'err');
+          return wait(900).then(function () {
+            close();
+            return mergeConflict(current, incoming, sub === 'pull' ? 'origin/main' : incoming);
+          }).then(open);
+        }
+        if (sub === 'push' && (args.indexOf('--force') !== -1 || args.indexOf('-f') !== -1)) {
+          print('remote: error: GH006: Protected branch update failed for refs/heads/main.', 'err');
+          print('remote: error: Force push till main är blockerat av branch protection. 🛡️', 'err');
+          return;
+        }
+        if (sub === 'push') { print('Everything up-to-date'); return; }
+        if (sub === 'blame') {
+          print('^7e55a5c (Christoffer Lilja 2008-03-26) <?php echo $myAge; ?>');
+          print('Ja, det var jag. Allt är mitt fel. Sedan 2004.', 'dim');
+          return;
+        }
+        if (!sub) { print('användning: git status | pull | merge <light|dark> | push | blame'); return; }
+        print("git: '" + sub + "' is not a git command. See 'git --help'.", 'err');
+      },
       rm: function (args) {
         if (isDangerousRm(args)) return nedry();
         print('rm: behörighet saknas', 'err');

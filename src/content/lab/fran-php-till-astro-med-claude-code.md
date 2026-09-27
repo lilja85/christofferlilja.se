@@ -8,8 +8,8 @@ draft: true
 
 <!--
   UTKAST skapat med Claude Code. Fyll i ✍️-rutorna och ta bort draft: true när du är nöjd.
-  OBS: publicera inte förrän den gamla sidan är nedtagen och MySQL-lösenordet är bytt,
-  eftersom avsnittet "Säkerhetsvinkeln" beskriver bristerna i den.
+  OBS: kontrollera att resterna av den gamla sidan (test/, protected/, includes/) är borta
+  innan du publicerar, eftersom avsnittet "Säkerhetsvinkeln" beskriver den.
 -->
 
 Mellan ungefär 2004 och 2008 byggde jag christofferlilja.se för hand. PHP, XHTML, CSS och lite
@@ -65,7 +65,9 @@ Eftersom jag är utvecklare, och lite nördig, ville jag ha påskägg. Jag avsl�
 
 Mycket av publiceringen sker i webbgränssnitt där Claude inte kan klicka, så här blev rollerna
 tydliga: jag klickade, Claude felsökte. Repot ligger publikt på GitHub som
-`christofferlilja.se`, och Cloudflare Pages bygger sidan vid varje push. Kvar är att peka domänen hit (se Nästa steg).
+`christofferlilja.se`, och Cloudflare Pages bygger sidan vid varje push. Repot har faktiskt
+skapats två gånger (se Säkerhetsvinkeln), och Pages-projektet fick kopplas om till det nya.
+Kvar är att bestämma hur sidan ska nå domänen (se Nästa steg).
 
 ## Det som strulade
 
@@ -90,6 +92,10 @@ tydliga: jag klickade, Claude felsökte. Repot ligger publikt på GitHub som
   `root directory not found`, eftersom jag hade angett `/dist` som *Root directory*. Men `dist`
   finns inte i repot. Den skapas först vid bygget. Rätt är att lämna *Root directory* tomt och ange
   `dist` som *Build output directory*.
+- **Force-push räckte inte.** Efter att vi skrivit om git-historiken (se nedan) gick de gamla
+  commitarna fortfarande att nå på GitHub via direktlänk till commit-id, och GitHubs publika
+  händelselogg visar commit-id:n från tidigare pushar. Lösningen blev att radera repot och skapa
+  det på nytt med den tvättade historiken.
 
 ## Säkerhetsvinkeln
 
@@ -101,10 +107,10 @@ Innan någon ny kod skrevs pekade Claude på att den gamla sidan fortfarande lå
 - en `.htpasswd` i webbroten
 
 Pinsamt för någon som jobbar med DevSecOps, men också en bra påminnelse: gammal kod som ingen
-tittar på är fortfarande kod som körs. Den gamla koden ligger nu i ett privat git-repo, med
-hemligheterna exkluderade.
-
-> ✍️ **Fyll i:** När och hur du tog ner den gamla sidan och bytte lösenordet.
+tittar på är fortfarande kod som körs. Lite tur var det också: databasen som lösenordet gick till
+fanns inte längre. Den försvann när jag bytte webbhotell 2022, och sidan hade bara följt med.
+`phpinfo()`-sidan och kontaktformuläret har jag tagit bort, och den gamla koden ligger nu i ett
+lokalt git-repo med hemligheterna exkluderade.
 
 Några saker till som jag tar med mig:
 
@@ -114,7 +120,10 @@ Några saker till som jag tar med mig:
   födelsedatum och mitt nuvarande mobilnummer. Och originalet till profilbilden innehöll
   fotografens namn, kontaktuppgifter och arbetsgivare i EXIF-datan. Den bilden låg i
   repot en stund innan vi upptäckte det. Den byggda sidan var ren, eftersom bildbehandlingen tar bort
-  metadata, men källfilen gjorde det inte.
+  metadata, men källfilen gjorde det inte. Claude sökte igenom hela git-historiken, både diffar
+  och metadata i alla bilder som någonsin legat i repot. Sedan skrevs historiken om med
+  `git filter-branch`, efter en säkerhetskopia som `git bundle`, och till sist fick repot skapas på nytt
+  (se Det som strulade).
 - **DNSSEC och namnservrar.** Ska man flytta DNS till Cloudflare måste DNSSEC stängas av först.
   Annars stämmer inte signaturerna efter bytet, och domänen slutar fungera för alla som
   validerar DNSSEC, vilket många svenska internetleverantörer gör.
@@ -146,8 +155,23 @@ inte om tecknet. Nu fungerar både `.` och `§`.
 
 ## Nästa steg
 
-- Ta ner den gamla sidan hos webbhotellet.
-- Peka domänen till Cloudflare Pages: stänga av DNSSEC, byta namnservrar och slå på DNSSEC igen
-  hos Cloudflare. Själva domänen behöver inte flyttas, och .se stöds ändå inte av Cloudflare Registrar.
-- Peka om liljaonline.se hit i stället för till about.me.
-- Skriva vidare om [homelabbet](/lab/): Proxmox i källaren, som hittills bara kör Pi-hole.
+<!-- Status 2026-09-28, för att kunna återuppta: sidan byggs av Cloudflare Pages från det nya repot
+     men nås bara via *.pages.dev. Domänen pekar fortfarande på den gamla sidan hos Inleed. -->
+
+- **Bestämma hur sidan når domänen**, antingen:
+  - **Cloudflare Pages** (redan kopplat): stänga av DNSSEC, byta namnservrar till Cloudflare, lägga
+    till domänen under Custom domains och slå på DNSSEC igen hos Cloudflare. Själva domänen behöver inte
+    flyttas, och .se stöds ändå inte av Cloudflare Registrar. Ingen e-post används på domänen.
+  - **GitHub Actions till webbhotellet** (lutar åt det, och det är en bra labb i sig): bygga och sedan
+    deploya `dist/` till `public_html` med rsync över SSH, om paketet har SSH, annars FTPS. Använd ett separat
+    konto som bara når `public_html`, secrets i en GitHub Environment `production` som bara får användas från `main`,
+    actions fastlåsta på SHA och en dry-run första gången. Synken tar bort gamla filer, men ska
+    undanta `.well-known/acme-challenge/` och `awstats`. `_headers` fungerar bara på Cloudflare och
+    måste bli en `.htaccess` (säkerhetsheaders, `charset=utf-8` för textfiler, `ErrorDocument 404`).
+    Ta bort Pages-projektet om det blir den här vägen.
+- **Städa resterna av den gamla sidan:** `test/`, `protected/` och `includes/` ligger fortfarande kvar.
+  En deploy med synk och radering tar hand om det automatiskt.
+- **Uppdatera dokumentationen** när hostingen är bestämd: `CLAUDE.md`, README och det här inlägget.
+- **Peka om liljaonline.se** hit i stället för till about.me.
+- **Fylla i ✍️-rutorna** och publicera.
+- **Skriva vidare om [homelabbet](/lab/):** Proxmox i källaren, som hittills bara kör Pi-hole.

@@ -339,25 +339,42 @@
   // Den inkommande versionen är en klon av sidan i det andra temat, klippt till en triangel.
   var THEME_NAMES = { light: 'light', dark: 'dark', gray: 'gray' };
 
+  // Bygger en kopia av sidan i ett annat tema, helt frikopplad innan den läggs in i DOM:en.
+  // Webbkomponenter (t.ex. Astros dev-verktygsfält) tas bort, eftersom de startar om
+  // när de ansluts till sidan och inte tål att klonas.
+  function isCustomElement(el) {
+    return el.tagName.indexOf('-') !== -1;
+  }
+  function cloneInTheme(theme, scrollY) {
+    var other = document.createElement('div');
+    other.className = 'fx-conflict-other fx-scope-' + theme;
+    var inner = document.createElement('div');
+    inner.className = 'fx-conflict-inner';
+    Array.prototype.forEach.call(document.body.children, function (child) {
+      if (isCustomElement(child) || child.matches('script, .term, .toast, .fx-overlay')) return;
+      inner.appendChild(child.cloneNode(true));
+    });
+    Array.prototype.forEach.call(inner.querySelectorAll('*'), function (e) {
+      if (isCustomElement(e) || e.tagName === 'SCRIPT') e.remove();
+      else e.removeAttribute('id');
+    });
+    inner.setAttribute('aria-hidden', 'true');
+    inner.style.transform = 'translateY(' + -scrollY + 'px)';
+    other.appendChild(inner);
+    return other;
+  }
+
   function conflict(opts, onResolve) {
     root.dataset.fx = 'busy';
     var scrollY = window.scrollY;
     var o = overlay('fx-conflict');
 
-    var other = document.createElement('div');
-    other.className = 'fx-conflict-other fx-scope-' + opts.incoming;
-    var inner = document.createElement('div');
-    inner.className = 'fx-conflict-inner';
-    Array.prototype.forEach.call(document.body.children, function (child) {
-      if (child.matches('script, .term, .toast, .fx-overlay')) return;
-      inner.appendChild(child.cloneNode(true));
-    });
-    inner.querySelectorAll('[id]').forEach(function (e) { e.removeAttribute('id'); });
-    inner.querySelectorAll('script').forEach(function (e) { e.remove(); });
-    inner.setAttribute('aria-hidden', 'true');
-    inner.style.transform = 'translateY(' + -scrollY + 'px)';
-    other.appendChild(inner);
-    o.appendChild(other);
+    // Klonen är bara dekoration. Går den inte att bygga visas konflikten ändå, utan delad vy.
+    try {
+      o.appendChild(cloneInTheme(opts.incoming, scrollY));
+    } catch (e) {
+      console.warn('Merge-konflikt: kunde inte klona sidan', e);
+    }
 
     var angle = -Math.atan2(window.innerHeight, window.innerWidth) * 180 / Math.PI;
     o.insertAdjacentHTML('beforeend',

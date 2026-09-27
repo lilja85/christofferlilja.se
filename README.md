@@ -19,7 +19,6 @@ npm run preview
 | `src/content/lab/*.md` | Labbanteckningar (`draft: true` döljer ett inlägg) |
 | `src/site.ts` | Namn, titel, länkar |
 | `public/cv/Christoffer_Lilja-CV.pdf` | CV:t. Länken visas bara om filen finns |
-| `public/arkiv/2008/` | Statisk kopia av den gamla PHP-sidan |
 | `public/_headers` | Säkerhetsheaders (Cloudflare Pages) |
 
 ## Publicering (Cloudflare Pages)

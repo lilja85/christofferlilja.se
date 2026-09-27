@@ -111,6 +111,45 @@ Quake-konsolen handlar om *tangenten under Esc*, inte om tecknet. Nu fungerar b�
 
 > ✍️ **Fyll i:** Ditt favoritpåskägg och varför.
 
+## Ut i världen: GitHub, Cloudflare och DNS
+
+Att bygga sidan gick snabbt. Att få ut den på nätet tog nästan lika lång tid, och här fick jag
+göra mer själv, eftersom mycket sker i webbgränssnitt där Claude inte kan klicka. Rollerna
+blev tydliga: jag klickade, Claude felsökte.
+
+**GitHub.** Mitt första försök att publicera från VS Code gick inte. Claude läste
+git-konfigurationen och Windows Autentiseringshanteraren (bara läsning, inga ändringar) och hittade två saker:
+en remote med fel namn som pekade på ett repo som inte fanns, och en gammal sparad inloggning från
+*GitHub for Visual Studio* som fortfarande försökte logga in med lösenord. GitHub har inte
+tagit emot lösenord för git på flera år. När det väl gick fick repot namnet `site` efter den lokala mappen.
+Jag döpte om det till `christofferlilja.se` på github.com och pekade om remoten lokalt med
+`git remote set-url`.
+
+En sak jag inte hade tänkt på: `draft: true` döljer bara ett inlägg på *sidan*. I repot
+ligger utkasten fullt läsbara, inklusive det här inlägget med beskrivningen av säkerhetsbristerna
+i den gamla sidan.
+
+> ✍️ **Fyll i:** Valde du ett privat eller publikt repo, och när planerar du att göra det publikt?
+
+**Cloudflare Pages.** Det nya flödet i Cloudflare visade ingen Astro-preset, och jag råkade skapa en
+Worker i stället för ett Pages-projekt. Via det äldre flödet hittade jag rätt. Sedan fick det
+första bygget felet `root directory not found`, eftersom jag hade angett `/dist` som *Root directory*.
+Men `dist` finns inte i repot. Den skapas först vid bygget. Rätt är att lämna
+*Root directory* tomt och ange `dist` som *Build output directory*.
+
+**DNS.** För att `christofferlilja.se` ska peka på Pages behöver domänens DNS ligga hos Cloudflare.
+Själva domänen behöver inte flyttas. Det räcker att byta namnservrar, vilket är tur, för
+Cloudflare Registrar hanterar inte .se-domäner. Claude slog upp domänens DNS och hittade två saker att
+se upp med:
+
+- **DNSSEC var påslaget.** Byter man namnservrar utan att först stänga av DNSSEC stämmer inte
+  signaturerna längre, och domänen slutar fungera för alla som validerar DNSSEC. Det gör många
+  svenska internetleverantörer. Först av, sedan byte, sedan på igen hos Cloudflare.
+- **E-posten.** MX- och SPF-posterna pekar på webbhotellet. Om de inte följer med försvinner
+  e-posten, och säger man upp webbhotellet utan att flytta e-posten försvinner den också.
+
+> ✍️ **Fyll i:** Hur DNS-bytet gick, och vad du gjorde med e-posten och det gamla webbhotellet.
+
 ## Vad jag tar med mig
 
 > ✍️ **Fyll i:** Dina egna slutsatser. Några frågor att utgå från: Vad var AI:n bra på, och var behövdes du?
@@ -119,5 +158,6 @@ Quake-konsolen handlar om *tangenten under Esc*, inte om tecknet. Nu fungerar b�
 
 ## Nästa steg
 
-- Publicera på Cloudflare Pages och peka om DNS.
+- Göra repot publikt när den gamla sidan är nedtagen, så att CI, Dependabot och påskäggen syns.
+- Peka om liljaonline.se hit i stället för till about.me.
 - Skriva vidare om [homelabbet](/lab/): Proxmox i källaren, som hittills bara kör Pi-hole.

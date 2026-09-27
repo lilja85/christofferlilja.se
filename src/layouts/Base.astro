@@ -143,6 +143,10 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
   img { max-width: 100%; height: auto; }
   code, pre { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.9em; }
   pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; overflow-x: auto; }
+  blockquote { margin: 1.25rem 0; padding: 0.6rem 1rem; border-left: 3px solid var(--accent); background: var(--card); border-radius: 0 8px 8px 0; }
+  blockquote p { margin: 0.25rem 0; }
+  article h2 { margin-top: 2.25rem; }
+  article li { margin: 0.3rem 0; }
   .wrap { max-width: 44rem; margin: 0 auto; padding: 0 16px; }
   .muted { color: var(--muted); }
   .site-header {

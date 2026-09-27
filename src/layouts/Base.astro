@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import avatar from '../assets/profil-avatar.jpg';
 import { SITE } from '../site';
 import '../styles/retro.css';
+import '../styles/fx.css';
 
 interface Props {
   title?: string;
@@ -43,6 +44,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     {SITE.links.map((l) => <link rel="me" href={l.href} />)}
     <!-- Sätter temat innan sidan ritas så att den inte blinkar till i fel färg -->
     <script is:inline src="/js/theme-init.js"></script>
+    <script is:inline src="/js/fx.js" defer></script>
     <script is:inline src="/js/site.js" defer></script>
     <script is:inline src="/js/retro.js" defer></script>
   </head>

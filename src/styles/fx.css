@@ -1,0 +1,161 @@
+/* Effekter för sudo-påskäggen (public/js/fx.js) */
+
+.fx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+/* ---- Blåskärm ------------------------------------------------------------ */
+.fx-bsod {
+  display: flex;
+  align-items: center;
+  background: #0078d7;
+  color: #ffffff;
+  font: 400 clamp(14px, 2vw, 22px)/1.45 'Segoe UI', system-ui, sans-serif;
+  text-shadow: none;
+}
+.fx-bsod-inner { max-width: 52rem; margin: 0 auto; padding: 0 clamp(16px, 8vw, 10rem); }
+.fx-bsod-face { font-size: clamp(80px, 12vw, 150px); line-height: 1; margin-bottom: 0.3em; }
+.fx-bsod p { margin: 0 0 1em; }
+.fx-bsod-foot { display: flex; gap: 1.25em; align-items: flex-start; font-size: 0.65em; }
+.fx-bsod-qr {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  width: 6.5em;
+  height: 6.5em;
+  padding: 0.35em;
+  background: #ffffff;
+}
+.fx-bsod-qr i.on { background: #0078d7; }
+
+/* ---- BIOS ------------------------------------------------------------------ */
+.fx-post {
+  background: #000000;
+  color: #c0c0c0;
+  text-shadow: none;
+}
+.fx-post pre {
+  margin: 0;
+  padding: 24px 16px;
+  font: 16px/1.5 'Courier New', ui-monospace, monospace;
+  white-space: pre-wrap;
+  background: none;
+  border: 0;
+}
+
+/* ---- Nedry ----------------------------------------------------------------- */
+.fx-nedry {
+  inset: auto 16px 16px auto;
+  width: min(20rem, calc(100% - 32px));
+  padding: 1rem;
+  background: #000000;
+  color: #39ff6a;
+  border: 2px solid #39ff6a;
+  font: 700 1.1rem/1.4 ui-monospace, 'Cascadia Code', Consolas, monospace;
+  text-align: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+}
+.fx-nedry p { margin: 0.5rem 0 0; }
+.fx-nedry-finger {
+  font-size: 3.5rem;
+  line-height: 1;
+  transform-origin: 50% 90%;
+  animation: fx-wag 0.45s ease-in-out infinite alternate;
+}
+@keyframes fx-wag {
+  from { transform: rotate(-22deg); }
+  to { transform: rotate(22deg); }
+}
+
+/* ---- Säkerhetskontroll ----------------------------------------------------- */
+.fx-lock {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(3px);
+}
+.fx-lock-box {
+  width: min(30rem, 100%);
+  padding: 1.25rem 1.5rem;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.4);
+  font: 16px/1.5 var(--font);
+}
+.fx-lock-box h2 { margin: 0 0 0.5rem; font-size: 1.3rem; text-transform: none; color: var(--fg); }
+.fx-lock-intro { color: var(--muted); }
+.fx-lock-step { margin: 1rem 0; padding: 1rem; border: 1px dashed var(--line); border-radius: 8px; }
+.fx-lock-step p { margin: 0 0 0.75rem; }
+.fx-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.fx-row input {
+  flex: 1;
+  min-width: 8rem;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.fx-lock button {
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  color: #ffffff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.fx-lock button:disabled { opacity: 0.45; cursor: default; text-decoration: line-through; }
+.fx-lock button:focus-visible, .fx-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fx-lock .fx-lock-close { background: none; color: var(--muted); padding: 0; text-decoration: underline; }
+.fx-msg { min-height: 1.5em; margin: 0.75rem 0 0 !important; color: var(--muted); }
+.fx-ok { font-weight: 600; }
+.fx-lock-progress { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--muted); }
+
+/* ---- vim ------------------------------------------------------------------- */
+.fx-vim {
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  background: #1c1c1c;
+  color: #d0d0d0;
+  font: 15px/1.4 ui-monospace, 'Cascadia Code', Consolas, monospace;
+  text-shadow: none;
+  cursor: text;
+}
+.fx-vim-buf { flex: 1; overflow: hidden; padding: 4px 8px; }
+.fx-vim-tilde { color: #5f87ff; }
+.fx-vim-status { display: flex; justify-content: space-between; padding: 0 8px; background: #d0d0d0; color: #1c1c1c; }
+.fx-vim-cmd { min-height: 1.4em; padding: 0 8px 4px; white-space: pre; overflow: hidden; }
+.fx-vim-cmd.err { color: #ff5f5f; }
+.fx-vim-input { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* ---- Terminaltillägg -------------------------------------------------------- */
+.term-hal {
+  width: 56px;
+  height: 56px;
+  margin: 0.5rem 0;
+  border-radius: 50%;
+  border: 4px solid #555555;
+  background: radial-gradient(circle, #fff6a0 0 6%, #ff2a00 14%, #8a0000 45%, #1a0000 70%);
+  box-shadow: 0 0 18px #ff2a00;
+  animation: fx-hal 2.4s ease-in-out infinite;
+}
+@keyframes fx-hal {
+  50% { box-shadow: 0 0 34px #ff2a00; filter: brightness(1.25); }
+}
+.term-haltext { color: #ff6b5a; }
+.term-wopr { color: #7fe7ff; letter-spacing: 0.05em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-nedry-finger, .term-hal { animation: none; }
+}
+
+/* Tomma rader i terminalen ska synas */
+.term-out > div:empty { min-height: 1.5em; }

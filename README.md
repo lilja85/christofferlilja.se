@@ -26,3 +26,9 @@ npm run preview
 Workers & Pages → Create → Pages → Connect to Git → välj repot.
 Build command `npm run build`, output `dist`, miljövariabel `NODE_VERSION=24`.
 Lägg sedan till `christofferlilja.se` och `www.christofferlilja.se` under Custom domains.
+
+## Påskägg
+
+Tryck `.` (eller tangenten under Esc) för terminalen, och kör `help` och `sudo -l`.
+Koden finns i `public/js/site.js` (terminal, tema, PIM), `public/js/fx.js` (krasch, blåskärm, vim, säkerhetskontroll)
+och `public/js/retro.js` (`theme 2008`), med stilar i `src/styles/`.

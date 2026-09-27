@@ -57,6 +57,11 @@
     document.title = document.title.replace(/^\[sudo \d+s\] /, '');
   }
   function sudo() {
+    if (window.Fx && window.Fx.isLocked()) {
+      toast('besökare finns inte i sudoers-filen. Den här incidenten kommer att rapporteras. 🚨');
+      auditLog('[AUDIT] Nekad sudo-förfrågan: kontot är spärrat. Öppna terminalen (".") och kör sudo.');
+      return;
+    }
     if (root.classList.contains('sudo')) {
       toast('sudo: du har redan förhöjd behörighet. Least privilege, tack.');
       term.print('sudo: du har redan förhöjd behörighet. Least privilege, tack.');
@@ -94,8 +99,11 @@
     if (dataEl) labPosts = JSON.parse(dataEl.textContent || '[]');
   } catch (e) {}
 
+  var Fx = window.Fx;
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
   var term = (function () {
-    var el, out, input, history = [], histPos = 0, buffer = [];
+    var el, out, input, history = [], histPos = 0, buffer = [], busy = false;
 
     function build() {
       el = document.createElement('div');
@@ -104,7 +112,7 @@
       el.setAttribute('aria-label', 'Terminal');
       el.hidden = true;
       el.innerHTML =
-        '<div class="term-bar"><span>christoffer@christofferlilja.se: ~</span>' +
+        '<div class="term-bar"><span>besokare@christofferlilja.se: ~</span>' +
         '<button type="button" class="term-close" aria-label="Stäng terminalen">×</button></div>' +
         '<div class="term-out" aria-live="polite"></div>' +
         '<label class="term-line"><span class="term-prompt">$</span>' +
@@ -116,17 +124,21 @@
       el.addEventListener('click', function (e) { if (e.target === el || e.target === out) input.focus(); });
       input.addEventListener('keydown', onKey);
       print('christofferlilja.se terminal. Skriv "help" för att se kommandon, Esc för att stänga.', 'dim');
-      buffer.forEach(function (b) { print(b[0], b[1]); });
+      buffer.forEach(function (b) { b(); });
       buffer = [];
     }
 
+    function append(node) {
+      out.appendChild(node);
+      out.scrollTop = out.scrollHeight;
+    }
+
     function print(text, cls) {
-      if (!out) { buffer.push([text, cls]); return; }
+      if (!out) { buffer.push(function () { print(text, cls); }); return; }
       var line = document.createElement('div');
       if (cls) line.className = 'term-' + cls;
       line.textContent = text;
-      out.appendChild(line);
-      out.scrollTop = out.scrollHeight;
+      append(line);
     }
 
     function printLink(label, href) {
@@ -135,8 +147,16 @@
       a.href = href;
       a.textContent = label;
       line.appendChild(a);
-      out.appendChild(line);
-      out.scrollTop = out.scrollHeight;
+      append(line);
+    }
+
+    // Skriver rader en i taget, för dramatisk effekt
+    function type(lines, delay, cls) {
+      var chain = Promise.resolve();
+      lines.forEach(function (l) {
+        chain = chain.then(function () { print(l, cls); return wait(delay); });
+      });
+      return chain;
     }
 
     function open() {
@@ -147,18 +167,26 @@
     function close() {
       if (el) el.hidden = true;
     }
-    function isOpen() {
-      return el && !el.hidden;
+
+    function setBusy(b) {
+      busy = b;
+      if (input) input.disabled = b;
+      if (!b && input && !el.hidden) input.focus();
     }
 
     function onKey(e) {
+      if (busy) return;
       if (e.key === 'Enter') {
         var cmd = input.value;
         input.value = '';
-        if (cmd.trim()) { history.push(cmd); }
+        if (cmd.trim()) history.push(cmd.trim());
         histPos = history.length;
         print('$ ' + cmd, 'cmd');
-        run(cmd.trim());
+        var result = run(cmd.trim());
+        if (result && typeof result.then === 'function') {
+          setBusy(true);
+          result.then(function () { setBusy(false); }, function () { setBusy(false); });
+        }
       } else if (e.key === 'ArrowUp') {
         if (histPos > 0) { histPos--; input.value = history[histPos]; }
         e.preventDefault();
@@ -178,6 +206,181 @@
       }
     }
 
+    function isDangerousRm(args) {
+      var flags = args.filter(function (a) { return a.charAt(0) === '-'; }).join('');
+      return /r/.test(flags) && /f/.test(flags);
+    }
+
+    // Jurassic Park: Dennis Nedry viftar med fingret
+    function nedry() {
+      var lines = [];
+      for (var i = 0; i < 6; i++) lines.push('Ah ah ah! Du sa inte det magiska ordet!');
+      return Promise.all([type(lines, 450, 'err'), Fx.nedry()]).then(function () {
+        print('(psst: det magiska ordet börjar på "su" och slutar på "do")', 'dim');
+      });
+    }
+
+    function denied(name) {
+      print(name + ': behörighet saknas', 'err');
+      return nedry();
+    }
+
+    // --- Kommandon som kräver sudo --------------------------------------
+    var sudoCommands = {
+      rm: function (args) {
+        if (!isDangerousRm(args)) {
+          print(args.length ? 'rm: kan inte ta bort \'' + args[args.length - 1] + '\': Filen eller katalogen finns inte' : 'rm: operand saknas', 'err');
+          return;
+        }
+        var targets = args.filter(function (a) { return a.charAt(0) !== '-'; });
+        var noPreserve = args.indexOf('--no-preserve-root') !== -1;
+        if (targets.indexOf('/*') !== -1 || (targets.indexOf('/') !== -1 && noPreserve)) return chaos();
+        if (targets.indexOf('/') !== -1) {
+          print('rm: det är farligt att arbeta rekursivt på \'/\'', 'err');
+          print('rm: använd --no-preserve-root för att gå förbi det här skyddet', 'err');
+          return;
+        }
+        print('rm: kan inte ta bort \'' + (targets[0] || '') + '\': Filen eller katalogen finns inte', 'err');
+      },
+      make: function (args) {
+        if (args.join(' ').toLowerCase() === 'me a sandwich') {
+          print('Okay.');
+          print('🥪');
+          print('(xkcd #149)', 'dim');
+          return;
+        }
+        print('make: *** Ingen regel för att skapa målet \'' + (args[0] || '') + '\'.  Stopp.', 'err');
+      },
+      shutdown: function () {
+        var eye = document.createElement('div');
+        eye.className = 'term-hal';
+        eye.setAttribute('aria-hidden', 'true');
+        append(eye);
+        return wait(1200)
+          .then(function () { return type(['I\'m sorry, Dave. I\'m afraid I can\'t do that.'], 1600, 'haltext'); })
+          .then(function () { return type(['Den här webbsidan är för viktig för att jag ska låta dig äventyra den.'], 400, 'haltext'); });
+      },
+      reboot: function () {
+        return type(['📞 Hello, IT.', 'Have you tried turning it off and on again?', 'Okej, jag gör det åt dig ...'], 1100)
+          .then(function () {
+            close();
+            return Fx.reboot();
+          })
+          .then(function () {
+            open();
+            auditLog('[SYSTEM] Omstart klar. Fungerar det nu? 👍');
+          });
+      },
+      launch: function () {
+        return type([
+          'GREETINGS PROFESSOR FALKEN.',
+          '',
+          'SHALL WE PLAY A GAME?',
+          '',
+          '  TIC-TAC-TOE',
+          '  SCHACK',
+          '  GLOBAL THERMONUCLEAR WAR',
+          '',
+          '> GLOBAL THERMONUCLEAR WAR'
+        ], 550, 'wopr')
+          .then(function () {
+            var sims = [];
+            for (var i = 0; i < 8; i++) sims.push('SIMULERING ' + (i + 1) + ' ... VINNARE: INGEN');
+            return type(sims, 180, 'wopr');
+          })
+          .then(function () {
+            return type(['', 'A STRANGE GAME.', 'THE ONLY WINNING MOVE IS NOT TO PLAY.', '', 'HOW ABOUT A NICE GAME OF CHESS?'], 900, 'wopr');
+          });
+      },
+      hire: function (args) {
+        if ((args[0] || '').toLowerCase() !== 'christoffer') {
+          print('hire: vem? Prova "sudo hire christoffer".', 'err');
+          return;
+        }
+        print('Utmärkt val! 🎉 Så här når du mig:');
+        printLink('→ LinkedIn', 'https://www.linkedin.com/in/lilja85/');
+        printLink('→ christoffer.lilja@gmail.com', 'mailto:christoffer.lilja@gmail.com');
+      },
+      vim: function () {
+        return commands.vim();
+      }
+    };
+
+    // rm -rf /* med sudo: terminalen rasslar, sidan rasar, blåskärm, omstart
+    function chaos() {
+      var files = ['/lab/homelab-del-1-proxmox-pihole', '/assets/profil-avatar.jpg', '/etc/humor', '/etc/sudoers',
+        '/home/christoffer/cv.pdf', '/usr/share/kaffe', '/var/log/påskägg.log', '/js/site.js', '/css/retro.css',
+        '/boot/vmlinuz', '/bin/bash', '/dev/null (hur?)', '/.well-known/security.txt', '/humans.txt', '/index.html'];
+      var lines = files.map(function (f) { return 'removed \'' + f + '\''; });
+      return type(lines, 110, 'err')
+        .then(function () { return wait(500); })
+        .then(function () {
+          close();
+          return Fx.crash('rm -rf /*');
+        });
+    }
+
+    function sudoCmd(args) {
+      var first = args[0];
+
+      if (first === '-k') {
+        if (root.classList.contains('sudo')) expireSudo(true);
+        else print('Ingen aktiv förhöjning att återkalla.', 'dim');
+        return;
+      }
+      if (first === '-h' || first === '--help') {
+        print('användning: sudo -h | -k | -l');
+        print('            sudo [kommando]');
+        print('Prova "sudo -l" för att se vad du får köra.', 'dim');
+        return;
+      }
+      if (first === 'help') {
+        print('sudo: help: kommandot hittades inte. Menade du "sudo -l"?', 'err');
+        return;
+      }
+      if (first === '!!') {
+        var prev = history[history.length - 2];
+        if (!prev) { print('sudo: !!: inget tidigare kommando', 'err'); return; }
+        var prevArgs = prev.split(/\s+/);
+        if (prevArgs[0] === 'sudo') prevArgs.shift();
+        print('sudo ' + prevArgs.join(' '), 'dim');
+        return sudoCmd(prevArgs);
+      }
+
+      if (Fx.isLocked()) {
+        print('besökare finns inte i sudoers-filen. Den här incidenten kommer att rapporteras.', 'err');
+        close();
+        Fx.lockout(function () {
+          open();
+          auditLog('[PIM] Säkerhetskontrollen godkänd. besökare är tillbaka i sudoers.');
+        });
+        return;
+      }
+
+      if (first === '-l') {
+        [
+          'Matchande standardposter för besökare på christofferlilja:',
+          '    lecture=always, insults, pim_timeout=60s',
+          '',
+          'Användaren besökare får köra följande kommandon på christofferlilja:',
+          '    (root) NOPASSWD: /usr/bin/make me a sandwich',
+          '    (root) NOPASSWD: /usr/bin/hire christoffer',
+          '    (root) /sbin/shutdown, /sbin/reboot',
+          '    (root) /usr/local/bin/launch',
+          '    (root) /usr/bin/vim',
+          '    (root) /bin/rm -rf /*        # rekommenderas verkligen inte',
+          '    (root) !!                    # kör om senaste kommandot med sudo',
+          '    (root) -k                    # avsluta förhöjd behörighet'
+        ].forEach(function (l) { print(l); });
+        return;
+      }
+      if (!first) { sudo(); return; }
+
+      var fn = sudoCommands[first.toLowerCase()];
+      if (fn) return fn(args.slice(1));
+      print('sudo: ' + first + ': kommandot hittades inte', 'err');
+    }
+
     var commands = {
       help: function () {
         print('Tillgängliga kommandon:');
@@ -186,12 +389,12 @@
         print('  cat <fil>     visa en fil (prova about.txt)');
         print('  open <mål>    linkedin, lab, security, humans');
         print('  theme <val>   light | dark | 2008');
-        print('  sudo [-k]     tidsbegränsad förhöjd behörighet (-k avslutar)');
-        print('  history, date, uname, clear, exit');
+        print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
+        print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
-        print('christoffer: DevSecOps & lösningsarkitektur, Jönköping.');
-        print('Grupper: consid, devsecops, homelab, nördar');
+        print('besökare. Men sidan handlar om christoffer: DevSecOps & lösningsarkitektur, Jönköping.');
+        print('Grupper: besökare, nyfikna' + (root.classList.contains('sudo') ? ', root (tillfälligt)' : ''));
       },
       ls: function (args) {
         if (args[0] === 'lab' || args[0] === 'lab/') {
@@ -234,25 +437,37 @@
         else if (args[0] === '2008') { setTheme('2008'); print('Spolar tillbaka till 2008 ... Kom ihåg att ringa upp modemet. 📞', 'log'); }
         else print('Användning: theme light | dark | 2008', 'err');
       },
-      sudo: function (args) {
-        if (args[0] === 'rm') { commands.rm(args.slice(1)); return; }
-        if (args[0] === '-k') {
-          if (root.classList.contains('sudo')) expireSudo(true);
-          else print('Ingen aktiv förhöjning att återkalla.', 'dim');
-          return;
-        }
-        sudo();
-      },
+      sudo: sudoCmd,
       rm: function (args) {
-        if (args.join(' ').indexOf('-rf') !== -1) print('rm: Nej. Bara nej. Den här incidenten har rapporterats. 🚨', 'err');
-        else print('rm: behörighet saknas', 'err');
+        if (isDangerousRm(args)) return nedry();
+        print('rm: behörighet saknas', 'err');
+      },
+      make: function (args) {
+        if (args.join(' ').toLowerCase() === 'me a sandwich') { print('What? Make it yourself.'); return; }
+        print('make: *** Ingen regel för att skapa målet \'' + (args[0] || '') + '\'.  Stopp.', 'err');
+      },
+      shutdown: function () { return denied('shutdown'); },
+      reboot: function () { return denied('reboot'); },
+      launch: function () { return denied('launch'); },
+      hire: function () {
+        print('hire: behörighet saknas. Anställningar kräver sudo. 😉', 'err');
+      },
+      vim: function () {
+        close();
+        return new Promise(function (resolve) {
+          Fx.vim(function () {
+            open();
+            print('Grattis, du tog dig ur vim! Det klarar inte alla. 🎉', 'log');
+            resolve();
+          });
+        });
       },
       history: function () {
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
       },
       date: function () { print(new Date().toString()); },
       uname: function () { print('ChristofferOS 2026 (Astro/statisk) x86_64 – inga cookies, ingen spårning'); },
-      pwd: function () { print('/home/christoffer'); },
+      pwd: function () { print('/home/besokare'); },
       cd: function () { print('cd: det finns ingenstans att gå. Det här är en statisk sida. 🙂', 'dim'); },
       clear: function () { out.textContent = ''; },
       exit: function () { close(); }
@@ -263,12 +478,14 @@
       var parts = line.split(/\s+/);
       var name = parts[0].toLowerCase();
       var fn = commands[name];
-      if (fn) fn(parts.slice(1));
-      else print(name + ': kommandot hittades inte. Skriv "help".', 'err');
+      if (fn) return fn(parts.slice(1));
+      print(name + ': kommandot hittades inte. Skriv "help".', 'err');
     }
 
-    return { open: open, close: close, isOpen: isOpen, print: print };
+    return { open: open, close: close, print: print };
   })();
+
+  if (Fx) Fx.afterLoad(auditLog);
 
   // --- Tangentbordslyssnare ------------------------------------------------
   var konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
@@ -278,6 +495,7 @@
     var t = e.target;
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (root.dataset.fx) return; // en effekt eller säkerhetskontrollen pågår
 
     if (e.key === '.' || e.code === 'Backquote') {
       e.preventDefault();
@@ -309,6 +527,6 @@
     'Hej! Kul att du tittar under huven. 🔧\n\n' +
     '• Hittat en säkerhetsbrist? Se /.well-known/security.txt\n' +
     '• Vem gjorde sidan? Se /humans.txt\n' +
-    '• Tips: tryck "." för en terminal, prova Konami-koden (↑ ↑ ↓ ↓ ← → ← → B A) eller skriv "sudo".'
+    '• Tips: tryck "." för en terminal och kör "sudo -l", eller prova Konami-koden (↑ ↑ ↓ ↓ ← → ← → B A).'
   );
 })();

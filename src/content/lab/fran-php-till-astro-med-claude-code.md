@@ -58,6 +58,8 @@ Eftersom jag är utvecklare, och lite nördig, ville jag ha påskägg. Jag avsl�
 - Byt tema lite för ofta, och upptäck att även temaknappen har rate limiting (och att WCAG 2.3.1 håller med).
 - Öppna sidan i två flikar och byt tema i båda.
 - Det finns ett tema från 2008, med besöksräknare och allt.
+- Det finns 20 påskägg totalt. Kör `achievements` i terminalen för att se hur många du hittat. Den som hittar
+  alla blir firad med fyrverkerier, som när Outlook firar ett "Congratulations", och får ett certifikat med verifierings-id.
 
 > ✍️ **Fyll i:** Ditt favoritpåskägg och varför.
 

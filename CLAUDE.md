@@ -43,6 +43,10 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   Byt tema via `setTheme()` så att `themechange` skickas.
 - Text på sidan är på svenska. Kommentarer i koden också.
 - Påskäggen är en del av sajten, inte skräp. Bevara dem, och tänk på `prefers-reduced-motion`.
+- **Påskäggsjakten:** alla ägg är listade i `public/js/achievements.js` (id, titel, beskrivning, ledtråd) och sparas
+  i `localStorage.eggs`. Ett nytt ägg läggs till där och låses upp med `window.Eggs.unlock('id')` där det utlöses.
+  Antalet visas i terminalen (`achievements`), sidfoten och konsolhälsningen, så uppdatera "20" i konsoltexten om antalet ändras.
+  När alla är hittade kommer fyrverkerier och ett certifikat (`Eggs.celebrate()`).
 
 ## Innehåll och integritet (publikt repo!)
 

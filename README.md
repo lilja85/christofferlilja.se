@@ -42,6 +42,7 @@ produktionen. Produktionen deployas bara från `main`, till webbhotellet.
 ## Påskägg
 
 Tryck `.` (eller tangenten under Esc) för terminalen, och kör `help` och `sudo -l`.
+Det finns 20 påskägg. `achievements` i terminalen visar hur många du hittat, och när alla är hittade blir det fest.
 Temaknappen är rate limitad (3 byten/10 s), och två flikar som byter tema samtidigt ger en merge-konflikt (även `git pull`).
 Koden finns i `public/js/site.js` (terminal, tema, PIM), `public/js/fx.js` (krasch, blåskärm, vim, säkerhetskontroll)
 och `public/js/retro.js` (`theme 2008`), med stilar i `src/styles/`.

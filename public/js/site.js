@@ -1,5 +1,7 @@
 (function () {
   var root = document.documentElement;
+  // Påskäggsjakten (public/js/achievements.js)
+  function egg(id) { if (window.Eggs) window.Eggs.unlock(id); }
 
   // --- Temaväxlare --------------------------------------------------------
   var toggle = document.getElementById('theme-toggle');
@@ -84,6 +86,7 @@
       toast('[WAF] OWASP CRS-regel 912120 utlöst: misstänkt DoS-attack mot temaknappen.\nKlienten övervakas. Retry-After förlängd till 20 s.', 6000);
       auditLog('[WAF] Regel 912120 (Denial of Service) utlöst av temaknappen. Retry-After: 20');
     } else if (strikes === 6) {
+      egg('sentinel');
       block(30);
       toast('[SENTINEL] Incident #4711 skapad.\nAllvarlighetsgrad: Låg · MITRE ATT&CK T1499 Endpoint Denial of Service (mot dina ögon)\nTilldelad: Christoffer · Retry-After: 30 s', 8000);
       auditLog('[SENTINEL] Incident #4711: upprepade temabyten trots 429. Taktik: T1499 Endpoint DoS. Tilldelad: Christoffer.');
@@ -105,6 +108,7 @@
       flips = flips.filter(function (t) { return now - t < RATE_WINDOW; });
       if (flips.length >= RATE_LIMIT) {
         block(10);
+        egg('ratelimit');
         toast('429 Too Many Requests · Retry-After: 10 s\nTemabyten är begränsade till ' + RATE_LIMIT + ' per 10 sekunder för att skydda mot brute force-attacker mot mörkerseendet. (Och ja, WCAG 2.3.1 håller med.)', 7000);
         auditLog('[RATE LIMIT] 429 Too Many Requests: fler än ' + RATE_LIMIT + ' temabyten på 10 s. Retry-After: 10');
         return;
@@ -137,6 +141,7 @@
           setTheme('gray', { resolved: true });
           toast('Accept Both: ljust + mörkt = grått. Ingen blev nöjd. Precis som en riktig kompromiss.', 6000);
         }
+        egg('merge');
         auditLog('[GIT] Merge-konflikt i theme löst (' + choice + '). Commit: "fix: resolve theme conflict"');
         resolve();
       });
@@ -213,6 +218,7 @@
     stripTitle();
     updateLabel();
     if (reason === 'button') {
+      egg('least-privilege');
       toast('Tack för att du minskar dina behörigheter! Least privilege när det är som bäst. 🔒🙏', 5000);
       auditLog('[PIM] Rollen "Global Nörd" lämnades tillbaka frivilligt. Säkerhetsteamet tackar. 🙏');
       return;
@@ -297,6 +303,7 @@
     }
 
     function open() {
+      egg('terminal');
       if (!el) build();
       el.hidden = false;
       input.focus();
@@ -350,6 +357,7 @@
 
     // Jurassic Park: Dennis Nedry viftar med fingret
     function nedry() {
+      egg('nedry');
       var lines = [];
       for (var i = 0; i < 6; i++) lines.push('Ah ah ah! Du sa inte det magiska ordet!');
       return Promise.all([type(lines, 450, 'err'), Fx.nedry()]).then(function () {
@@ -371,7 +379,7 @@
         }
         var targets = args.filter(function (a) { return a.charAt(0) !== '-'; });
         var noPreserve = args.indexOf('--no-preserve-root') !== -1;
-        if (targets.indexOf('/*') !== -1 || (targets.indexOf('/') !== -1 && noPreserve)) return chaos();
+        if (targets.indexOf('/*') !== -1 || (targets.indexOf('/') !== -1 && noPreserve)) { egg('crash'); return chaos(); }
         if (targets.indexOf('/') !== -1) {
           print('rm: det är farligt att arbeta rekursivt på \'/\'', 'err');
           print('rm: använd --no-preserve-root för att gå förbi det här skyddet', 'err');
@@ -382,6 +390,7 @@
       make: function (args) {
         if (args.join(' ').toLowerCase() === 'me a sandwich') {
           print('Okay.');
+          egg('sandwich');
           print('🥪');
           print('(xkcd #149)', 'dim');
           return;
@@ -389,6 +398,7 @@
         print('make: *** Ingen regel för att skapa målet \'' + (args[0] || '') + '\'.  Stopp.', 'err');
       },
       shutdown: function () {
+        egg('hal');
         var eye = document.createElement('div');
         eye.className = 'term-hal';
         eye.setAttribute('aria-hidden', 'true');
@@ -398,6 +408,7 @@
           .then(function () { return type(['Den här webbsidan är för viktig för att jag ska låta dig äventyra den.'], 400, 'haltext'); });
       },
       reboot: function () {
+        egg('itcrowd');
         return type(['📞 Hello, IT.', 'Have you tried turning it off and on again?', 'Okej, jag gör det åt dig ...'], 1100)
           .then(function () {
             close();
@@ -409,6 +420,7 @@
           });
       },
       launch: function () {
+        egg('wargames');
         return type([
           'GREETINGS PROFESSOR FALKEN.',
           '',
@@ -434,6 +446,7 @@
           print('hire: vem? Prova "sudo hire christoffer".', 'err');
           return;
         }
+        egg('hire');
         print('Utmärkt val! 🎉 Så här når du mig:');
         printLink('→ LinkedIn', 'https://www.linkedin.com/in/lilja85/');
         printLink('→ christoffer.lilja@gmail.com', 'mailto:christoffer.lilja@gmail.com');
@@ -488,6 +501,7 @@
         print('besökare finns inte i sudoers-filen. Den här incidenten kommer att rapporteras.', 'err');
         close();
         Fx.lockout(function () {
+          egg('lockout');
           open();
           auditLog('[PIM] Säkerhetskontrollen godkänd. besökare är tillbaka i sudoers.');
         });
@@ -495,6 +509,7 @@
       }
 
       if (first === '-l') {
+        egg('sudo-l');
         [
           'Matchande standardposter för besökare på christofferlilja:',
           '    lecture=always, insults, pim_timeout=60s',
@@ -528,6 +543,7 @@
         print('  theme <val>   light | dark | 2008');
         print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
         print('  git <kmd>     status | pull | merge <light|dark> | push | blame | remote -v');
+        print('  achievements  hur många påskägg har du hittat?');
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
@@ -614,6 +630,7 @@
         }
         if (sub === 'remote') {
           if (args[1] !== '-v') { print('origin'); print('preview'); return; }
+          egg('remote');
           print('origin   https://github.com/lilja85/christofferlilja.se.git (fetch)');
           print('origin   https://github.com/lilja85/christofferlilja.se.git (push)');
           print('preview  https://christofferlilja-se.pages.dev (Cloudflare Pages, varje branch får en egen)');
@@ -660,6 +677,25 @@
           });
         });
       },
+      achievements: function (args) {
+        if (!window.Eggs) { print('achievements: inte tillgängligt', 'err'); return; }
+        var all = window.Eggs.all();
+        if (args[0] === '--reset') { window.Eggs.reset(); print('Alla påskägg är nollställda. Lycka till igen!', 'dim'); return; }
+        if (args[0] === '--celebrate') {
+          if (window.Eggs.found().length === all.length) { close(); window.Eggs.celebrate(); }
+          else print('Nice try. Hitta alla först. 😉', 'err');
+          return;
+        }
+        var n = window.Eggs.found().length;
+        var width = 20;
+        var filled = Math.round(n / all.length * width);
+        print('[' + new Array(filled + 1).join('█') + new Array(width - filled + 1).join('░') + '] ' + n + '/' + all.length + ' påskägg');
+        all.forEach(function (e) {
+          if (window.Eggs.isFound(e.id)) print('  🏆 ' + e.title + ': ' + e.desc, 'log');
+          else print('  ??? ' + e.hint, 'dim');
+        });
+        if (n === all.length) print('Alla hittade! Kör "achievements --celebrate" för att fira igen. 🎆');
+      },
       history: function () {
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
       },
@@ -674,6 +710,8 @@
       exit: function () { close(); }
     };
 
+    commands.trophies = commands.achievements;
+
     function run(line) {
       if (!line) return;
       var parts = line.split(/\s+/);
@@ -682,6 +720,13 @@
       if (fn) return fn(parts.slice(1));
       print(name + ': kommandot hittades inte. Skriv "help".', 'err');
     }
+
+    // Räknaren i sidfoten: öppna terminalen och visa listan
+    document.addEventListener('eggs:show', function () {
+      open();
+      print('$ achievements', 'cmd');
+      commands.achievements([]);
+    });
 
     return { open: open, close: close, print: print };
   })();
@@ -706,7 +751,7 @@
 
     var key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     pos = key === konami[pos] ? pos + 1 : (key === konami[0] ? 1 : 0);
-    if (pos === konami.length) { pos = 0; sudo(); }
+    if (pos === konami.length) { pos = 0; egg('konami'); sudo(); }
 
     if (key.length === 1) {
       typed = (typed + key).slice(-4);
@@ -729,6 +774,7 @@
     '• Hittat en säkerhetsbrist? Se /.well-known/security.txt\n' +
     '• Vem gjorde sidan? Se /humans.txt\n' +
     '• Tips: tryck "." för en terminal och kör "sudo -l", eller prova Konami-koden (↑ ↑ ↓ ↓ ← → ← → B A).\n' +
-    '• Psst: det går att skriva "sudo" direkt på sidan också.'
+    '• Psst: det går att skriva "sudo" direkt på sidan också.\n' +
+    '• Det finns 20 påskägg. Kör "achievements" i terminalen för att se hur många du hittat.'
   );
 })();

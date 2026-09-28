@@ -237,7 +237,10 @@
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   var term = (function () {
-    var el, out, input, history = [], histPos = 0, buffer = [], busy = false;
+    // Förifylld historik från "förra besökaren": ledtrådar till påskägg som inte står i help
+    var PREVIOUS_VISITOR = ['make me a sandwich', 'git status', 'theme 2008', 'rm -rf /'];
+    var history = PREVIOUS_VISITOR.slice();
+    var el, out, input, histPos = history.length, buffer = [], busy = false;
 
     function build() {
       el = document.createElement('div');
@@ -537,7 +540,11 @@
           labPosts.forEach(function (p) { printLink(p.date + '  ' + p.title, p.url); });
           return;
         }
-        print('about.txt  lab/  .well-known/  humans.txt  .secrets');
+        if (args.some(function (a) { return /^-[a-z]*a/.test(a); })) {
+          print('.  ..  .bash_history  .secrets  .well-known/  about.txt  humans.txt  lab/');
+          return;
+        }
+        print('about.txt  humans.txt  lab/');
       },
       cat: function (args) {
         var f = args[0] || '';
@@ -545,6 +552,11 @@
           print('Utvecklare sedan 2007, numera mest säkerhet i leveranskedjan:');
           print('Azure DevOps, GitHub Advanced Security, Terraform, Entra ID och IAM/IGA.');
           print('Bygger hellre lösningar som teamen vill använda än regler de måste följa.');
+        } else if (f === '.bash_history') {
+          print('# förra besökarens historik. Vad höll hen på med?', 'dim');
+          PREVIOUS_VISITOR.forEach(function (h) { print(h); });
+          print('# varför blinkar temaknappen så konstigt när jag klickar snabbt?', 'dim');
+          print('# och varför blev det en merge-konflikt när jag hade två flikar öppna?', 'dim');
         } else if (f === '.secrets') {
           print('cat: .secrets: Åtkomst nekad. Snyggt försök, dock. 😉', 'err');
         } else if (f === 'humans.txt' || f === '.well-known/security.txt') {
@@ -701,6 +713,7 @@
     'Hej! Kul att du tittar under huven. 🔧\n\n' +
     '• Hittat en säkerhetsbrist? Se /.well-known/security.txt\n' +
     '• Vem gjorde sidan? Se /humans.txt\n' +
-    '• Tips: tryck "." för en terminal och kör "sudo -l", eller prova Konami-koden (↑ ↑ ↓ ↓ ← → ← → B A).'
+    '• Tips: tryck "." för en terminal och kör "sudo -l", eller prova Konami-koden (↑ ↑ ↓ ↓ ← → ← → B A).\n' +
+    '• Psst: det går att skriva "sudo" direkt på sidan också.'
   );
 })();

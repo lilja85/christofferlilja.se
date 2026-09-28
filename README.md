@@ -22,9 +22,17 @@ npm run preview
 | `public/.htaccess` | www-omdirigering, teckenkodning och 404-sida (Apache) |
 | `scripts/security-headers.mjs` | Säkerhetsheaders, som skrivs till `.htaccess` eller `_headers` vid bygget |
 
+## Arbetsflöde
+
+`main` är skyddad. Ändringar görs på en branch och går in via pull request:
+
+1. `git switch -c feature/min-andring`, commit, `git push -u origin feature/min-andring`
+2. Öppna en PR. CI bygger och Cloudflare lägger en förhandsvisning i PR:en.
+3. Granska förhandsvisningen och merga. Mergen deployar till produktion.
+
 ## Publicering
 
-`.github/workflows/ci.yml` bygger, kör `npm audit` och deployar `dist/` till webbhotellet vid push till `main`.
+`.github/workflows/ci.yml` bygger, kör `npm audit` och deployar `dist/` till webbhotellet när `main` uppdateras (efter merge).
 
 1. Repo-variabel `DEPLOY_METHOD` = `ftps` (eller `ssh`).
 2. Miljön `production` (endast `main`) med secrets `DEPLOY_PATH` och `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`

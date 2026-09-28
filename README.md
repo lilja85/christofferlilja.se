@@ -36,7 +36,8 @@ Deployen synkar med radering: filer som inte finns i `dist/` tas bort från webb
 ## Förhandsvisningar
 
 Cloudflare Pages bygger varje branch och pull request och lägger en preview-URL i PR:en. Förhandsvisningarna
-har samma säkerhetsheaders plus `X-Robots-Tag: noindex`. Produktionen deployas bara från `main`, till webbhotellet.
+har samma säkerhetsheaders plus `X-Robots-Tag: noindex`, och en gul banner som visar branch och commit och länkar till
+produktionen. Produktionen deployas bara från `main`, till webbhotellet.
 
 ## Påskägg
 

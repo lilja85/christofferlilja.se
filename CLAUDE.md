@@ -66,6 +66,9 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - **Två miljöer:** produktion = webbhotellet (GitHub Actions + FTPS från `main`). Förhandsvisning =
   Cloudflare Pages, som bygger alla branches och PR:er med `noindex` och lägger preview-URL:en i PR:en.
   Arbetsflöde för större ändringar: branch → PR → granska previewn → merge (som deployar).
+- `Base.astro` läser `CF_PAGES`, `CF_PAGES_BRANCH` och `CF_PAGES_COMMIT_SHA` vid bygget. På Cloudflare visas en gul
+  banner (branch, commit, länk till produktionen) och `<html data-env="preview">`. Terminalen använder `data-env`
+  (`git remote -v`, `open preview|production`, `uname`).
 
 - **Push till `main` deployar direkt** till produktion. Före ändringar som tar bort eller flyttar filer:
   kör workflowen manuellt (`workflow_dispatch`, `dry_run` förvalt) och granska listan först.

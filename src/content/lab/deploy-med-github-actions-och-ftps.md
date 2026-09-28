@@ -100,6 +100,11 @@ förhandsvisningarna inte indexeras. `.htaccess` tas bort, eftersom Apache-konfi
 Saknas platsen för headers i `.htaccess` stoppas bygget, och deploy-jobbet kontrollerar att CSP:n finns med
 innan något laddas upp.
 
+Förhandsvisningarna ska inte gå att förväxla med den riktiga sidan. Cloudflare talar om vilken branch och
+commit som byggs, så de får en gul banner med just det, och en länk till produktionen. Och eftersom det här
+är min sida finns det förstås ett påskägg åt andra hållet: `git remote -v` i terminalen på den riktiga
+sidan avslöjar var förhandsvisningarna finns.
+
 ## Det som strulade
 
 - **Punktfiler i artefakten.** `actions/upload-artifact` hoppar som standard över dolda filer. Utan

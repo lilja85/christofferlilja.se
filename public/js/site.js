@@ -238,7 +238,7 @@
 
   var term = (function () {
     // Förifylld historik från "förra besökaren": ledtrådar till påskägg som inte står i help
-    var PREVIOUS_VISITOR = ['make me a sandwich', 'git status', 'theme 2008', 'rm -rf /'];
+    var PREVIOUS_VISITOR = ['make me a sandwich', 'git status', 'git remote -v', 'theme 2008', 'rm -rf /'];
     var history = PREVIOUS_VISITOR.slice();
     var el, out, input, histPos = history.length, buffer = [], busy = false;
 
@@ -524,10 +524,10 @@
         print('  whoami        vem är jag?');
         print('  ls [lab]      lista innehåll');
         print('  cat <fil>     visa en fil (prova about.txt)');
-        print('  open <mål>    linkedin, lab, security, humans');
+        print('  open <mål>    linkedin, lab, security, humans, preview, production');
         print('  theme <val>   light | dark | 2008');
         print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
-        print('  git <kmd>     status | pull | merge <light|dark> | push | blame');
+        print('  git <kmd>     status | pull | merge <light|dark> | push | blame | remote -v');
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
@@ -570,6 +570,8 @@
       open: function (args) {
         var targets = {
           linkedin: 'https://www.linkedin.com/in/lilja85/',
+          preview: 'https://christofferlilja-se.pages.dev/',
+          production: 'https://christofferlilja.se/',
           lab: '/lab/',
           security: '/.well-known/security.txt',
           humans: '/humans.txt'
@@ -609,6 +611,16 @@
             close();
             return mergeConflict(current, incoming, sub === 'pull' ? 'origin/main' : incoming);
           }).then(open);
+        }
+        if (sub === 'remote') {
+          if (args[1] !== '-v') { print('origin'); print('preview'); return; }
+          print('origin   https://github.com/lilja85/christofferlilja.se.git (fetch)');
+          print('origin   https://github.com/lilja85/christofferlilja.se.git (push)');
+          print('preview  https://christofferlilja-se.pages.dev (Cloudflare Pages, varje branch får en egen)');
+          print(root.dataset.env === 'preview'
+            ? '(du är i förhandsvisningen just nu. Produktionen: open production)'
+            : '(nyfiken på vad som är på väg? open preview)', 'dim');
+          return;
         }
         if (sub === 'push' && (args.indexOf('--force') !== -1 || args.indexOf('-f') !== -1)) {
           print('remote: error: GH006: Protected branch update failed for refs/heads/main.', 'err');
@@ -652,7 +664,10 @@
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
       },
       date: function () { print(new Date().toString()); },
-      uname: function () { print('ChristofferOS 2026 (Astro/statisk) x86_64 – inga cookies, ingen spårning'); },
+      uname: function () {
+        var env = root.dataset.env === 'preview' ? 'förhandsvisning på Cloudflare Pages' : 'produktion på webbhotellet';
+        print('ChristofferOS 2026 (Astro/statisk, ' + env + ') x86_64 – inga cookies, ingen spårning');
+      },
       pwd: function () { print('/home/besokare'); },
       cd: function () { print('cd: det finns ingenstans att gå. Det här är en statisk sida. 🙂', 'dim'); },
       clear: function () { out.textContent = ''; },

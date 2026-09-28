@@ -16,6 +16,12 @@ const pageTitle = title ? `${title} – ${SITE.name}` : `${SITE.name} – ${SITE
 const ogImage = await getImage({ src: avatar, width: 1200, height: 1200, format: 'jpg' });
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
+// Cloudflare Pages sätter CF_PAGES m.fl. vid bygget. Där är sidan en förhandsvisning, inte produktionen.
+const REPO = 'https://github.com/lilja85/christofferlilja.se';
+const preview = process.env.CF_PAGES
+  ? { branch: process.env.CF_PAGES_BRANCH ?? '', sha: process.env.CF_PAGES_COMMIT_SHA ?? '' }
+  : null;
+
 // Labbinläggen skickas med som data så att den hemliga terminalen kan köra "ls lab"
 const labData = (await getCollection('lab', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
@@ -26,7 +32,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
    Hej, du som läser källkod! 👋
    Tryck "." på sidan, prova ↑ ↑ ↓ ↓ ← → ← → B A, eller öppna konsolen.
 -->
-<html lang="sv">
+<html lang="sv" data-env={preview ? 'preview' : 'production'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -51,6 +57,11 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     <script is:inline src="/js/retro.js" defer></script>
   </head>
   <body>
+    {preview && (
+      <div class="env-banner" role="note">
+        <strong>Förhandsvisning</strong> på Cloudflare Pages{preview.branch && preview.branch !== 'main' && <> · branch <code>{preview.branch}</code></>}{preview.sha && <> · <a href={`${REPO}/commit/${preview.sha}`}>{preview.sha.slice(0, 7)}</a></>}. Den riktiga sidan finns på <a href="https://christofferlilja.se/">christofferlilja.se</a>.
+      </div>
+    )}
     <header class="wrap site-header">
       <a href="/" class="brand">{SITE.name}</a>
       <nav>
@@ -189,6 +200,17 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
   :root.sudo .theme-toggle .icon-sun, :root.sudo .theme-toggle .icon-moon { display: none; }
   :root.sudo .theme-toggle .icon-lock { display: block; }
   :root.sudo .theme-toggle { border-color: var(--accent); color: var(--accent); }
+  .env-banner {
+    padding: 0.5rem 16px;
+    background: #ffe27a;
+    color: #1d1d1f;
+    border-bottom: 1px solid #d9b93a;
+    font: 0.9rem/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    text-align: center;
+    text-shadow: none;
+  }
+  .env-banner a { color: #1d1d1f; text-decoration-thickness: 2px; }
+  .env-banner code { font-size: 0.85em; }
   .site-footer {
     margin-top: 4rem; padding-top: 1.5rem; padding-bottom: 2rem;
     border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem;

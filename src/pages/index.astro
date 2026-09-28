@@ -15,9 +15,9 @@ const posts = (await getCollection('lab', ({ data }) => !data.draft))
   .slice(0, 3);
 
 const focus = [
-  { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies och GitHub Advanced Security. Säkrare releaser med blue/green-deploy och feature toggles.' },
+  { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies och GitHub Advanced Security. Hotmodellering och workshops så att teamen förstår varför, inte bara hur.' },
   { title: 'Infrastruktur som kod', text: 'Terraform och Bicep i pipelines som granskar och rullar ut ändringar automatiskt. Teamen behåller farten utan att vänta på någon med rätt behörighet.' },
-  { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, AKS, Functions och Defender for Cloud. Lösningar som utvärderas mot Well-Architected Framework.' },
+  { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, API Management, AKS, Functions och Defender for Cloud. Lösningar som utvärderas mot Well-Architected Framework.' },
   { title: 'IAM/IGA', text: 'Behörighetshantering i OpenText IAM/IGA: least privilege, segregation of duties och governance med återkommande granskning av vem som har åtkomst.' },
 ];
 

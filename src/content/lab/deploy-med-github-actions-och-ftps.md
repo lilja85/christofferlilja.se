@@ -123,6 +123,24 @@ sidan avslöjar var förhandsvisningarna finns.
   deployar på riktigt, och instruktionen jag fick sa "pusha och kör sedan dry run". Ordningen var fel.
   Det gick bra, men rätt ordning är: lägg in inställningarna, kör manuellt med `dry_run`, pusha sedan.
 
+### Skyddad main och pull requests
+
+Till en början pushade jag direkt till `main`, och eftersom en push till `main` deployar till produktion
+betydde det att varje commit gick rakt ut. Med förhandsvisningar på plats fanns det ingen anledning att
+jobba så längre. Nu är `main` skyddad och allt går via pull requests:
+
+1. En branch, till exempel `feature/paskaggsjakt`.
+2. En pull request. CI bygger, och Cloudflare lägger en förhandsvisning i PR:en.
+3. Merge när förhandsvisningen ser bra ut, och då deployas ändringen till produktion.
+
+Skyddet ligger på två nivåer. På **GitHub** finns en ruleset för `main` som kräver pull request och
+godkänt CI-bygge och blockerar force-push och radering. Och eftersom jag jobbar med en AI-agent har även
+**Claude Code** en egen spärr: `.claude/settings.json` i repot nekar `git push` till `main` och
+force-push, så att agenten inte ens försöker. Instruktionen i `CLAUDE.md` är den tredje nivån, men den är en
+uppmaning, inte en spärr. Det är samma resonemang som i jobbet: lita inte på att alla läser dokumentationen.
+
+> ✍️ **Fyll i:** Hur du ställde in rulesetet, till exempel med eller utan krav på godkännande, och om du själv får gå förbi det.
+
 ## Säkerhetsvinkeln
 
 - **Minsta behörighet slog bekvämlighet.** FTPS med lösenord låter sämre än SSH-nycklar, men ett konto
@@ -160,6 +178,7 @@ provkörning. Och det var jag som märkte att SSH-begränsningen inte gällde.
 ## Nästa steg
 
 - Slå på *Required reviewers* på miljön `production` om det inte redan är gjort.
+- Beskriva rulesetet för `main` som kod, till exempel med Terraforms GitHub-provider, i stället för att klicka fram det.
 - Om webbhotellet någon gång får rsync, eller SSH-konton som bara når en katalog: byta till SSH med en nyckel
   som bara får köra `rrsync`.
 - Kontrollera att PR:er från forks inte byggs automatiskt på Cloudflare, eftersom repot är publikt.

@@ -58,7 +58,12 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 
 - Committa med `git -c user.name="Christoffer Lilja" -c user.email="christoffer.lilja@gmail.com"`.
   Den globala git-konfigurationen har jobbadressen.
-- **Pusha aldrig utan att fråga.** En push till `main` publicerar sajten (deploy-jobbet).
+- **`main` är skyddad.** Allt går via branch → pull request → förhandsvisning på Cloudflare → merge.
+  Merge till `main` deployar till produktion. Direktpush och force-push till `main` blockeras av en
+  ruleset på GitHub och av `permissions.deny` i `.claude/settings.json`. Försök inte gå runt dem.
+- Branchnamn: `feature/…` för nytt, `fix/…` för buggar, `chore/…` för underhåll och dokumentation.
+- Pusha feature-brancher bara efter att ha frågat. Öppna PR:en på GitHub (ingen `gh` CLI installerad) och
+  länka den. Mergen gör Christoffer.
 - CI (`.github/workflows/ci.yml`) kör bygge och `npm audit`. Actions är fastlåsta på SHA. Behåll det vid uppdateringar.
 
 ## Deploy

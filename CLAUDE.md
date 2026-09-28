@@ -24,7 +24,11 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - `src/styles/retro.css` (2008-temat), `src/styles/fx.css` (sudo-effekter, terminal, merge-konflikt)
 - `public/js/`: `theme-init.js` (blockerande i head), `fx.js` (effekter, `window.Fx`), `site.js`
   (tema, rate limit, PIM/sudo, terminal, git-kommandon), `retro.js` (2008-temats 00-talsdetaljer)
-- `public/.htaccess`: säkerhetsheaders (CSP, HSTS m.fl.), `charset=utf-8`, 404-sida. Apache läser den på webbhotellet.
+- `scripts/security-headers.mjs`: **enda källan** för säkerhetsheaders (CSP, HSTS m.fl.). Ändra dem här.
+- `scripts/postbuild.mjs` (körs av `npm run build`): skriver headers till `dist/.htaccess` (webbhotellet) eller,
+  när `CF_PAGES` är satt, till `dist/_headers` med noindex och tar bort `.htaccess` (Cloudflare-förhandsvisning).
+- `public/.htaccess`: www-omdirigering, `charset=utf-8`, 404-sida och markören `# @security-headers`, som
+  postbuild ersätter. Ta inte bort markören, då fallerar bygget med flit.
 - `.github/workflows/ci.yml`: bygge + `npm audit`, sedan deploy-jobbet (se Deploy nedan)
 - `../public_html/` (syskonmapp) är den gamla PHP-sidan: rör den inte och publicera inget därifrån.
 
@@ -58,6 +62,10 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - CI (`.github/workflows/ci.yml`) kör bygge och `npm audit`. Actions är fastlåsta på SHA. Behåll det vid uppdateringar.
 
 ## Deploy
+
+- **Två miljöer:** produktion = webbhotellet (GitHub Actions + FTPS från `main`). Förhandsvisning =
+  Cloudflare Pages, som bygger alla branches och PR:er med `noindex` och lägger preview-URL:en i PR:en.
+  Arbetsflöde för större ändringar: branch → PR → granska previewn → merge (som deployar).
 
 - **Push till `main` deployar direkt** till produktion. Före ändringar som tar bort eller flyttar filer:
   kör workflowen manuellt (`workflow_dispatch`, `dry_run` förvalt) och granska listan först.

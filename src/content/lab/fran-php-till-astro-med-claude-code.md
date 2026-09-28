@@ -165,6 +165,5 @@ inte om tecknet. Nu fungerar både `.` och `§`.
      Båda labbanteckningarna är utkast, så Lab-länken i menyn är dold tills en publiceras. -->
 
 - **Peka om liljaonline.se** hit i stället för till about.me.
-- **Ta bort Cloudflare Pages-projektet**, om det inte redan är gjort.
 - **Fylla i ✍️-rutorna** i den här och i [deploy-anteckningen](/lab/deploy-med-github-actions-och-ftps/), och publicera.
 - **Skriva vidare om [homelabbet](/lab/):** Proxmox i källaren, som hittills bara kör Pi-hole.

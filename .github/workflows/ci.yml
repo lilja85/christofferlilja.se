@@ -61,6 +61,8 @@ jobs:
         run: |
           test -f dist/index.html
           test -f dist/.htaccess
+          grep -q 'Content-Security-Policy' dist/.htaccess || { echo 'Säkerhetsheaders saknas i .htaccess'; exit 1; }
+          test ! -f dist/_headers
           test -f dist/.well-known/security.txt
           test -n "$DEPLOY_PATH" || { echo "DEPLOY_PATH saknas"; exit 1; }
           echo "Provkörning: $DRY_RUN"

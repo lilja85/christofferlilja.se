@@ -86,6 +86,20 @@ deploy:
 Säkerhetsheaders, teckenkodning, 404-sida och omdirigering från www ligger i en `.htaccess` som följer
 med i bygget.
 
+### Förhandsvisningar på Cloudflare Pages
+
+Cloudflare Pages byggde redan sidan, och det var lite kul, så jag behöll det, men med en tydlig roll: **förhandsvisningar**.
+Cloudflare bygger varje branch och pull request och lägger en egen URL i PR:en. Då kan jag titta på en ändring
+innan den mergas till `main` och går ut i produktion.
+
+Två miljöer betyder två sätt att sätta headers: `.htaccess` för Apache och `_headers` för Cloudflare. Två
+filer med samma CSP glider förr eller senare isär, så headers finns nu på **ett** ställe
+(`scripts/security-headers.mjs`). Ett litet skript efter bygget skriver dem i rätt format. Cloudflare sätter
+miljövariabeln `CF_PAGES` när den bygger, och då blir det `_headers` med `X-Robots-Tag: noindex`, så att
+förhandsvisningarna inte indexeras. `.htaccess` tas bort, eftersom Apache-konfigen inte ska gå att hämta där.
+Saknas platsen för headers i `.htaccess` stoppas bygget, och deploy-jobbet kontrollerar att CSP:n finns med
+innan något laddas upp.
+
 ## Det som strulade
 
 - **Punktfiler i artefakten.** `actions/upload-artifact` hoppar som standard över dolda filer. Utan
@@ -143,4 +157,5 @@ provkörning. Och det var jag som märkte att SSH-begränsningen inte gällde.
 - Slå på *Required reviewers* på miljön `production` om det inte redan är gjort.
 - Om webbhotellet någon gång får rsync, eller SSH-konton som bara når en katalog: byta till SSH med en nyckel
   som bara får köra `rrsync`.
+- Kontrollera att PR:er från forks inte byggs automatiskt på Cloudflare, eftersom repot är publikt.
 - Peka om liljaonline.se hit.

@@ -19,7 +19,8 @@ npm run preview
 | `src/content/lab/*.md` | Labbanteckningar (`draft: true` döljer ett inlägg) |
 | `src/site.ts` | Namn, titel, länkar |
 | `public/cv/Christoffer_Lilja-CV.pdf` | CV:t. Länken visas bara om filen finns |
-| `public/.htaccess` | Säkerhetsheaders, teckenkodning och 404-sida (Apache) |
+| `public/.htaccess` | www-omdirigering, teckenkodning och 404-sida (Apache) |
+| `scripts/security-headers.mjs` | Säkerhetsheaders, som skrivs till `.htaccess` eller `_headers` vid bygget |
 
 ## Publicering
 
@@ -31,6 +32,11 @@ npm run preview
 3. Kör workflowen manuellt (Actions → CI → Run workflow). `dry_run` är förvalt och listar bara ändringarna.
 
 Deployen synkar med radering: filer som inte finns i `dist/` tas bort från webbhotellet.
+
+## Förhandsvisningar
+
+Cloudflare Pages bygger varje branch och pull request och lägger en preview-URL i PR:en. Förhandsvisningarna
+har samma säkerhetsheaders plus `X-Robots-Tag: noindex`. Produktionen deployas bara från `main`, till webbhotellet.
 
 ## Påskägg
 

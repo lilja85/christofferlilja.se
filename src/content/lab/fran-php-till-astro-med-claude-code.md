@@ -72,7 +72,8 @@ till Cloudflare. Jag funderade också på GitHub Pages, men där går det inte a
 HTTP-headers. CSP kan läggas som `<meta>`-tagg, men till exempel `frame-ancestors`, `nosniff` och
 HSTS går inte att styra. Det slutade med att **GitHub Actions bygger sidan och deployar den till
 mitt vanliga webbhotell** med FTPS. Headers sätts i en `.htaccess`, och ingen DNS behöver ändras.
-Det blev dessutom en bra labb i säker deploy, som får en egen anteckning.
+Det blev dessutom en bra labb i säker deploy, som jag skrivit om i
+[Deploy med GitHub Actions och FTPS till ett vanligt webbhotell](/lab/deploy-med-github-actions-och-ftps/).
 
 ## Det som strulade
 
@@ -160,16 +161,10 @@ inte om tecknet. Nu fungerar både `.` och `§`.
 
 ## Nästa steg
 
-<!-- Status 2026-09-28: deploy-workflowen (GitHub Actions → FTPS till webbhotellet) är skriven men
-     inte aktiverad. Domänen visar fortfarande resterna av den gamla sidan. -->
+<!-- Status 2026-09-28: sidan är live på christofferlilja.se och deployas av GitHub Actions med FTPS.
+     Båda labbanteckningarna är utkast, så Lab-länken i menyn är dold tills en publiceras. -->
 
-- **Aktivera deployen:** separat FTP-konto i DirectAdmin som bara når `public_html`, GitHub-miljön
-  `production` med secrets, repo-variabeln `DEPLOY_METHOD=ftps`, en provkörning (`dry_run`) och sedan en
-  riktig körning. Då ersätts resterna av den gamla sidan (`test/`, `protected/`, `includes/`).
-- **Kontrollera headers efteråt:** nginx framför Apache kan servera statiska filer direkt och hoppa
-  över `.htaccess`.
-- **Ta bort Cloudflare Pages-projektet.**
-- **Skriva en labbanteckning om deployen** med skillen `labbanteckning`.
 - **Peka om liljaonline.se** hit i stället för till about.me.
-- **Fylla i ✍️-rutorna** och publicera.
+- **Ta bort Cloudflare Pages-projektet**, om det inte redan är gjort.
+- **Fylla i ✍️-rutorna** i den här och i [deploy-anteckningen](/lab/deploy-med-github-actions-och-ftps/), och publicera.
 - **Skriva vidare om [homelabbet](/lab/):** Proxmox i källaren, som hittills bara kör Pi-hole.

@@ -1,8 +1,16 @@
-# Webbhotellet (Apache bakom nginx). Motsvarar det som tidigare låg i _headers för Cloudflare.
+# Webbhotellet (Apache bakom nginx). Deployas med resten av dist/ från GitHub Actions.
 # HTTPS-omdirigering görs med "Force SSL" i DirectAdmin, inte här: bakom nginx-proxyn
-# ser Apache alla anrop som HTTP och en omdirigering här skulle ge en loop.
+# ser Apache alla anrop som HTTP och en villkorad omdirigering här skulle ge en loop.
 
 Options -Indexes
+
+# www → utan www (absolut https-mål, så ingen loop bakom nginx)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
 

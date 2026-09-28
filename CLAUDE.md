@@ -59,6 +59,11 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 
 ## Deploy
 
+- **Push till `main` deployar direkt** till produktion. Före ändringar som tar bort eller flyttar filer:
+  kör workflowen manuellt (`workflow_dispatch`, `dry_run` förvalt) och granska listan först.
+- Produktion använder **FTPS** (`DEPLOY_METHOD=ftps`) med ett FTP-konto som bara når `public_html`.
+  SSH finns på webbhotellet men utan rsync, och SFTP fungerar bara med huvudkontot, som når allt. SSH-grenen i
+  workflowen finns kvar om det ändras.
 - Deploy-jobbet i `ci.yml` körs från `main` när repo-variabeln `DEPLOY_METHOD` är `ftps` eller `ssh`.
   Uppgifterna är secrets i GitHub-miljön `production`: `DEPLOY_PATH` plus `FTP_HOST`/`FTP_USER`/`FTP_PASSWORD`
   (FTPS) eller `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_SSH_KEY`/`DEPLOY_KNOWN_HOSTS` (SSH, valfri variabel `DEPLOY_PORT`).

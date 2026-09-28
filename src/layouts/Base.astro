@@ -34,6 +34,8 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="author" href="/humans.txt" />
     <meta name="color-scheme" content="light dark" />
     <meta property="og:type" content="website" />
@@ -53,7 +55,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
       <a href="/" class="brand">{SITE.name}</a>
       <nav>
         <a href="/">Om mig</a>
-        <a href="/lab/">Lab</a>
+        {labData.length > 0 && <a href="/lab/">Lab</a>}
         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Byt till mörkt tema" title="Byt tema">
           <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" /></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z" /></svg>

@@ -13,7 +13,7 @@ Den lärde mig mer än någon kurs.
 
 /* SITE */
 Byggd med: Astro, HTML, CSS och lite vanilla-JS
-Publicerad med: Cloudflare Pages
+Publicerad med: GitHub Actions och FTPS till mitt webbhotell
 Kakor: inga
 Spårning: ingen
 Påskägg: ja (tips: tryck "." på sidan)

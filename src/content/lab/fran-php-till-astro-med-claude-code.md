@@ -30,8 +30,8 @@ liljaonline.se skickade vidare till about.me. Frågan var vad sidan skulle vara 
 Jag startade Claude Code i *plan mode*, där agenten bara får läsa och fråga, inte ändra något,
 och bad den gå igenom sidan och ge förslag. Den läste koden och mitt nya CV och frågade tre saker:
 vilken inriktning sidan skulle ha, vad som skulle hända med den gamla sidan och var den skulle hostas.
-Vi landade i en **profilsida plus labbanteckningar**, alltså det du läser nu, statiskt byggd och
-hostad på Cloudflare Pages.
+Vi landade i en **profilsida plus labbanteckningar**, alltså det du läser nu, statiskt byggd.
+Var den skulle ligga ändrades längs vägen (se Ut på nätet).
 
 ## Så här gjorde jag
 
@@ -39,10 +39,10 @@ hostad på Cloudflare Pages.
 
 - **[Astro](https://astro.build)** bygger statisk HTML från mallar och Markdown. Ingen server,
   ingen databas, inget att hacka. Labbanteckningarna är vanliga `.md`-filer.
-- **GitHub** lagrar koden och **Cloudflare Pages** bygger och publicerar vid varje push.
+- **GitHub** lagrar koden och **GitHub Actions** bygger och deployar till mitt vanliga webbhotell vid varje push.
 - **GitHub Actions** kör bygge och `npm audit`. Actions är fastlåsta på commit-SHA och
   `permissions` är så snäva som möjligt. Dependabot håller beroendena uppdaterade.
-- **Säkerhetsheaders** via `_headers`: CSP utan inline-skript, HSTS och så vidare. Det är därför
+- **Säkerhetsheaders** via `.htaccess`: CSP utan inline-skript, HSTS och så vidare. Det är därför
   all JavaScript ligger i egna filer.
 - **`/.well-known/security.txt`** enligt RFC 9116, där utgångsdatumet räknas fram vid varje bygge.
 
@@ -65,9 +65,14 @@ Eftersom jag är utvecklare, och lite nördig, ville jag ha påskägg. Jag avsl�
 
 Mycket av publiceringen sker i webbgränssnitt där Claude inte kan klicka, så här blev rollerna
 tydliga: jag klickade, Claude felsökte. Repot ligger publikt på GitHub som
-`christofferlilja.se`, och Cloudflare Pages bygger sidan vid varje push. Repot har faktiskt
-skapats två gånger (se Säkerhetsvinkeln), och Pages-projektet fick kopplas om till det nya.
-Kvar är att bestämma hur sidan ska nå domänen (se Nästa steg).
+`christofferlilja.se`. Repot har faktiskt skapats två gånger (se Säkerhetsvinkeln).
+
+Först byggde Cloudflare Pages sidan, men för att få domänen dit hade jag behövt flytta DNS
+till Cloudflare. Jag funderade också på GitHub Pages, men där går det inte att sätta egna
+HTTP-headers. CSP kan läggas som `<meta>`-tagg, men till exempel `frame-ancestors`, `nosniff` och
+HSTS går inte att styra. Det slutade med att **GitHub Actions bygger sidan och deployar den till
+mitt vanliga webbhotell** med FTPS. Headers sätts i en `.htaccess`, och ingen DNS behöver ändras.
+Det blev dessutom en bra labb i säker deploy, som får en egen anteckning.
 
 ## Det som strulade
 
@@ -124,7 +129,7 @@ Några saker till som jag tar med mig:
   och metadata i alla bilder som någonsin legat i repot. Sedan skrevs historiken om med
   `git filter-branch`, efter en säkerhetskopia som `git bundle`, och till sist fick repot skapas på nytt
   (se Det som strulade).
-- **DNSSEC och namnservrar.** Ska man flytta DNS till Cloudflare måste DNSSEC stängas av först.
+- **DNSSEC och namnservrar.** Hade jag flyttat DNS till Cloudflare hade DNSSEC behövt stängas av först.
   Annars stämmer inte signaturerna efter bytet, och domänen slutar fungera för alla som
   validerar DNSSEC, vilket många svenska internetleverantörer gör.
 
@@ -155,23 +160,16 @@ inte om tecknet. Nu fungerar både `.` och `§`.
 
 ## Nästa steg
 
-<!-- Status 2026-09-28, för att kunna återuppta: sidan byggs av Cloudflare Pages från det nya repot
-     men nås bara via *.pages.dev. Domänen pekar fortfarande på den gamla sidan hos Inleed. -->
+<!-- Status 2026-09-28: deploy-workflowen (GitHub Actions → FTPS till webbhotellet) är skriven men
+     inte aktiverad. Domänen visar fortfarande resterna av den gamla sidan. -->
 
-- **Bestämma hur sidan når domänen**, antingen:
-  - **Cloudflare Pages** (redan kopplat): stänga av DNSSEC, byta namnservrar till Cloudflare, lägga
-    till domänen under Custom domains och slå på DNSSEC igen hos Cloudflare. Själva domänen behöver inte
-    flyttas, och .se stöds ändå inte av Cloudflare Registrar. Ingen e-post används på domänen.
-  - **GitHub Actions till webbhotellet** (lutar åt det, och det är en bra labb i sig): bygga och sedan
-    deploya `dist/` till `public_html` med rsync över SSH, om paketet har SSH, annars FTPS. Använd ett separat
-    konto som bara når `public_html`, secrets i en GitHub Environment `production` som bara får användas från `main`,
-    actions fastlåsta på SHA och en dry-run första gången. Synken tar bort gamla filer, men ska
-    undanta `.well-known/acme-challenge/` och `awstats`. `_headers` fungerar bara på Cloudflare och
-    måste bli en `.htaccess` (säkerhetsheaders, `charset=utf-8` för textfiler, `ErrorDocument 404`).
-    Ta bort Pages-projektet om det blir den här vägen.
-- **Städa resterna av den gamla sidan:** `test/`, `protected/` och `includes/` ligger fortfarande kvar.
-  En deploy med synk och radering tar hand om det automatiskt.
-- **Uppdatera dokumentationen** när hostingen är bestämd: `CLAUDE.md`, README och det här inlägget.
+- **Aktivera deployen:** separat FTP-konto i DirectAdmin som bara når `public_html`, GitHub-miljön
+  `production` med secrets, repo-variabeln `DEPLOY_METHOD=ftps`, en provkörning (`dry_run`) och sedan en
+  riktig körning. Då ersätts resterna av den gamla sidan (`test/`, `protected/`, `includes/`).
+- **Kontrollera headers efteråt:** nginx framför Apache kan servera statiska filer direkt och hoppa
+  över `.htaccess`.
+- **Ta bort Cloudflare Pages-projektet.**
+- **Skriva en labbanteckning om deployen** med skillen `labbanteckning`.
 - **Peka om liljaonline.se** hit i stället för till about.me.
 - **Fylla i ✍️-rutorna** och publicera.
 - **Skriva vidare om [homelabbet](/lab/):** Proxmox i källaren, som hittills bara kör Pi-hole.

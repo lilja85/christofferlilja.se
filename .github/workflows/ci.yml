@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Provkörning: lista vad som skulle laddas upp och raderas, utan att ändra något'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -22,3 +28,84 @@ jobs:
       - run: npm ci
       - run: npm audit --audit-level=high
       - run: npm run build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          # .htaccess och .well-known/ är punktfiler och skulle annars saknas
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  # Deploy till webbhotellet (Inleed). Körs bara från main och bara när repo-variabeln
+  # DEPLOY_METHOD är satt (ftps eller ssh). Uppgifterna ligger som secrets i miljön production.
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_METHOD != ''
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      # Pushar deployar på riktigt. Manuella körningar är provkörningar om inget annat väljs.
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist
+
+      - name: Kontrollera artefakten
+        run: |
+          test -f dist/index.html
+          test -f dist/.htaccess
+          test -f dist/.well-known/security.txt
+          test -n "$DEPLOY_PATH" || { echo "DEPLOY_PATH saknas"; exit 1; }
+          echo "Provkörning: $DRY_RUN"
+
+      # FTPS (explicit TLS på port 21) med certifikatkontroll. Lösenordet skickas via
+      # miljövariabel (--env-password) i stället för på kommandoraden.
+      - name: Deploy med FTPS
+        if: vars.DEPLOY_METHOD == 'ftps'
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          DRY=""; [ "$DRY_RUN" = "true" ] && DRY="--dry-run"
+          lftp --env-password -u "$FTP_USER" "ftp://$FTP_HOST" -e "
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            set ssl:verify-certificate yes;
+            set net:max-retries 2;
+            set net:timeout 30;
+            mirror --reverse --delete --verbose $DRY \
+              --exclude '^\.well-known/acme-challenge/' \
+              --exclude '^cgi-bin/' \
+              --exclude '^\.ftpquota$' \
+              dist/ '$DEPLOY_PATH';
+            quit"
+
+      # SSH + rsync med fastlåst värdnyckel (ingen StrictHostKeyChecking=no).
+      - name: Deploy med SSH och rsync
+        if: vars.DEPLOY_METHOD == 'ssh'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
+          DRY=""; [ "$DRY_RUN" = "true" ] && DRY="--dry-run"
+          rsync -rlvz --delete $DRY \
+            --exclude='/.well-known/acme-challenge/' \
+            --exclude='/cgi-bin/' \
+            -e "ssh -i ~/.ssh/deploy_key -p $DEPLOY_PORT -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          rm -f ~/.ssh/deploy_key

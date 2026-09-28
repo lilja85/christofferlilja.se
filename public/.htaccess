@@ -1,0 +1,19 @@
+# Webbhotellet (Apache bakom nginx). Motsvarar det som tidigare låg i _headers för Cloudflare.
+# HTTPS-omdirigering görs med "Force SSL" i DirectAdmin, inte här: bakom nginx-proxyn
+# ser Apache alla anrop som HTTP och en omdirigering här skulle ge en loop.
+
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+# Textfiler (humans.txt, security.txt, robots.txt) med rätt teckenkodning för å/ä/ö
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .txt .html .css .js .svg
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"
+</IfModule>

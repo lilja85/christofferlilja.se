@@ -1,6 +1,6 @@
 # christofferlilja.se
 
-Profilsida och labbanteckningar. Byggd med [Astro](https://astro.build) som statisk sida och publicerad på Cloudflare Pages.
+Profilsida och labbanteckningar. Byggd med [Astro](https://astro.build) som statisk sida och publicerad till webbhotellet med GitHub Actions.
 
 ## Kom igång
 
@@ -19,13 +19,18 @@ npm run preview
 | `src/content/lab/*.md` | Labbanteckningar (`draft: true` döljer ett inlägg) |
 | `src/site.ts` | Namn, titel, länkar |
 | `public/cv/Christoffer_Lilja-CV.pdf` | CV:t. Länken visas bara om filen finns |
-| `public/_headers` | Säkerhetsheaders (Cloudflare Pages) |
+| `public/.htaccess` | Säkerhetsheaders, teckenkodning och 404-sida (Apache) |
 
-## Publicering (Cloudflare Pages)
+## Publicering
 
-Workers & Pages → Create → Pages → Connect to Git → välj repot.
-Build command `npm run build`, output `dist`, miljövariabel `NODE_VERSION=24`.
-Lägg sedan till `christofferlilja.se` och `www.christofferlilja.se` under Custom domains.
+`.github/workflows/ci.yml` bygger, kör `npm audit` och deployar `dist/` till webbhotellet vid push till `main`.
+
+1. Repo-variabel `DEPLOY_METHOD` = `ftps` (eller `ssh`).
+2. Miljön `production` (endast `main`) med secrets `DEPLOY_PATH` och `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`
+   (eller `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`).
+3. Kör workflowen manuellt (Actions → CI → Run workflow). `dry_run` är förvalt och listar bara ändringarna.
+
+Deployen synkar med radering: filer som inte finns i `dist/` tas bort från webbhotellet.
 
 ## Påskägg
 

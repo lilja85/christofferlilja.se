@@ -1,6 +1,6 @@
 export const SITE = {
   name: 'Christoffer Lilja',
-  title: 'DevSecOps & lösningsarkitektur',
+  title: 'DevSecOps-konsult och lösningsarkitekt',
   location: 'Jönköping',
   email: 'christoffer.lilja@gmail.com',
   links: [

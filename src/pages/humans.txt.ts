@@ -3,7 +3,7 @@ import { textResponse } from '../lib/text';
 export const GET = () =>
   textResponse(`/* TEAM */
 Utvecklare: Christoffer Lilja
-Roll: DevSecOps & lösningsarkitektur
+Roll: DevSecOps-konsult och lösningsarkitekt
 Ort: Jönköping, Sverige
 LinkedIn: https://www.linkedin.com/in/lilja85/
 

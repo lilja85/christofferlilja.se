@@ -531,7 +531,7 @@
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
-        print('besökare. Men sidan handlar om christoffer: DevSecOps & lösningsarkitektur, Jönköping.');
+        print('besökare. Men sidan handlar om christoffer, DevSecOps-konsult och lösningsarkitekt i Jönköping.');
         print('Grupper: besökare, nyfikna' + (root.classList.contains('sudo') ? ', root (tillfälligt)' : ''));
       },
       ls: function (args) {

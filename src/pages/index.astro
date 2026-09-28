@@ -15,10 +15,10 @@ const posts = (await getCollection('lab', ({ data }) => !data.draft))
   .slice(0, 3);
 
 const focus = [
-  { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies, GitHub Advanced Security och CodeQL.' },
-  { title: 'Infrastruktur som kod', text: 'Terraform och Bicep, pipelines som låter teamen behålla sin fart.' },
+  { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies och GitHub Advanced Security.' },
+  { title: 'Infrastruktur som kod', text: 'Terraform och Bicep i pipelines som granskar och rullar ut ändringar automatiskt. Teamen behåller farten utan att vänta på någon med rätt behörighet.' },
   { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, AKS och Functions. Lösningar som utvärderas mot Well-Architected Framework.' },
-  { title: 'IAM/IGA', text: 'Behörighetshantering i OpenText IAM/IGA, least privilege och segregation of duties.' },
+  { title: 'IAM/IGA', text: 'Behörighetshantering i OpenText IAM/IGA: least privilege, segregation of duties och governance med återkommande granskning av vem som har åtkomst.' },
 ];
 
 const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
@@ -41,7 +41,8 @@ const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
     <p>
       Jag har jobbat som .NET-utvecklare sedan 2007. De senaste åren har jag
       mest arbetat med utvecklings- och leveranskedjan, med fokus på säkerhet. Just nu arbetar
-      jag mest med behörighetshantering (IAM/IGA) i OpenTexts produkter.
+      jag mest med behörighetshantering (IAM/IGA), och mycket i OpenTexts produkter, men också
+      med kringsystem och integrationer.
     </p>
     <p>
       Utvecklarbakgrunden gör att jag förstår varför team ibland går runt säkerheten. Därför

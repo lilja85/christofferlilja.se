@@ -200,6 +200,7 @@
     }
     root.classList.add('sudo');
     updateLabel();
+    term.refresh();
     var left = SUDO_SECONDS;
     toast('[PIM] Rollen "Global Nörd" aktiverad i ' + left + ' s. Motivering: "ville bara testa".', 5000);
     auditLog('[PIM] Aktivering godkänd: rollen "Global Nörd" i ' + SUDO_SECONDS + ' s. Loggad för granskning.');
@@ -217,6 +218,7 @@
     root.classList.remove('sudo');
     stripTitle();
     updateLabel();
+    term.refresh();
     if (reason === 'button') {
       egg('least-privilege');
       toast('Tack för att du minskar dina behörigheter! Least privilege när det är som bäst. 🔒🙏', 5000);
@@ -255,7 +257,7 @@
       el.setAttribute('aria-label', 'Terminal');
       el.hidden = true;
       el.innerHTML =
-        '<div class="term-bar"><span>besokare@christofferlilja.se: ~</span>' +
+        '<div class="term-bar"><span class="term-title">besokare@christofferlilja.se: ~</span>' +
         '<button type="button" class="term-close" aria-label="Stäng terminalen">×</button></div>' +
         '<div class="term-out" aria-live="polite"></div>' +
         '<label class="term-line"><span class="term-prompt">$</span>' +
@@ -302,9 +304,20 @@
       return chain;
     }
 
+    function isRoot() { return root.classList.contains('sudo'); }
+
+    // Titel och prompt följer behörigheten: besokare/$ normalt, root/# i sudo-läge
+    function refresh() {
+      if (!el) return;
+      el.querySelector('.term-title').textContent = (isRoot() ? 'root' : 'besokare') + '@christofferlilja.se: ~';
+      el.querySelector('.term-prompt').textContent = isRoot() ? '#' : '$';
+      el.classList.toggle('term-root', isRoot());
+    }
+
     function open() {
       egg('terminal');
       if (!el) build();
+      refresh();
       el.hidden = false;
       input.focus();
     }
@@ -325,7 +338,7 @@
         input.value = '';
         if (cmd.trim()) history.push(cmd.trim());
         histPos = history.length;
-        print('$ ' + cmd, 'cmd');
+        print((isRoot() ? '# ' : '$ ') + cmd, 'cmd');
         var result = run(cmd.trim());
         if (result && typeof result.then === 'function') {
           setBusy(true);
@@ -547,8 +560,12 @@
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
+        if (isRoot()) {
+          print('root (tillfälligt, via PIM). Kom ihåg att lämna tillbaka behörigheten.');
+          return;
+        }
         print('besökare. Men sidan handlar om christoffer, DevSecOps-konsult och lösningsarkitekt i Jönköping.');
-        print('Grupper: besökare, nyfikna' + (root.classList.contains('sudo') ? ', root (tillfälligt)' : ''));
+        print('Grupper: besökare, nyfikna');
       },
       ls: function (args) {
         if (args[0] === 'lab' || args[0] === 'lab/') {
@@ -704,7 +721,7 @@
         var env = root.dataset.env === 'preview' ? 'förhandsvisning på Cloudflare Pages' : 'produktion på webbhotellet';
         print('ChristofferOS 2026 (Astro/statisk, ' + env + ') x86_64 – inga cookies, ingen spårning');
       },
-      pwd: function () { print('/home/besokare'); },
+      pwd: function () { print(isRoot() ? '/root' : '/home/besokare'); },
       cd: function () { print('cd: det finns ingenstans att gå. Det här är en statisk sida. 🙂', 'dim'); },
       clear: function () { out.textContent = ''; },
       exit: function () { close(); }
@@ -728,7 +745,7 @@
       commands.achievements([]);
     });
 
-    return { open: open, close: close, print: print };
+    return { open: open, close: close, print: print, refresh: refresh };
   })();
 
   if (Fx) Fx.afterLoad(auditLog);

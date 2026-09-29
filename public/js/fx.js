@@ -29,16 +29,33 @@
   // --- Gravitation: alla element faller ner och studsar --------------------
   function fall() {
     if (reducedMotion) return wait(300);
-    var selectors = '.brand, .site-header nav > *, main h1, main h2, main p, main li, main img, main pre, .site-footer > *, .retro-marquee, .retro-construction';
+    // I 2008-läget faller hela headern (loggan är en bakgrundsbild), annars logga och meny var för sig
+    var header = root.dataset.theme === '2008' ? '.site-header' : '.brand, .site-header nav > *';
+    var selectors = [
+      '.env-banner', header, '#toast:not([hidden])', '.site-footer',
+      'main h1', 'main h2', 'main h3', 'main p', 'main li', 'main img', 'main pre',
+      'main blockquote', 'main table', 'main hr', 'main time',
+      '.retro-marquee', '.retro-construction'
+    ].join(', ');
     var picked = Array.prototype.slice.call(document.querySelectorAll(selectors));
     // Ta bara med de yttersta, så att t.ex. ett <p> inuti ett <li> inte faller för sig självt
     picked = picked.filter(function (el) {
       return !picked.some(function (other) { return other !== el && other.contains(el); });
     });
-    var bodies = picked.map(function (el) {
+    // Mät allt först. Det som syns faller; det som ligger utanför skärmen döljs, annars glider det
+    // upp i bild när elementen ovanför lämnar layouten.
+    var bodies = [];
+    var offscreen = [];
+    picked.forEach(function (el) {
       var r = el.getBoundingClientRect();
-      return { el: el, x: r.left, y: r.top, w: r.width, h: r.height, vy: -Math.random() * 3, vx: (Math.random() - 0.5) * 2, rot: 0, vr: (Math.random() - 0.5) * 6 };
-    }).filter(function (b) { return b.w > 0 && b.h > 0 && b.y < window.innerHeight; });
+      if (r.width === 0 || r.height === 0) return;
+      if (r.bottom < 0 || r.top > window.innerHeight) { offscreen.push(el); return; }
+      bodies.push({ el: el, x: r.left, y: r.top, w: r.width, h: r.height, vy: -Math.random() * 3, vx: (Math.random() - 0.5) * 2, rot: 0, vr: (Math.random() - 0.5) * 6 });
+    });
+    offscreen.forEach(function (el) { el.style.visibility = 'hidden'; });
+    // 2008-lägets innehållsyta är en bakgrundsbild på main, som annars står kvar som en tom remsa
+    var main = document.querySelector('main');
+    if (main && root.dataset.theme === '2008') main.style.background = 'none';
 
     bodies.forEach(function (b) {
       var s = b.el.style;
@@ -94,10 +111,10 @@
     return new Promise(function (resolve) {
       var n = 0;
       var t = setInterval(function () {
-        n = Math.min(100, n + Math.ceil(Math.random() * 12));
+        n = Math.min(100, n + 1 + Math.floor(Math.random() * 8));
         pct.textContent = n;
-        if (n >= 100) { clearInterval(t); setTimeout(function () { resolve(o); }, 700); }
-      }, 280);
+        if (n >= 100) { clearInterval(t); setTimeout(function () { resolve(o); }, 1500); }
+      }, 350);
     });
   }
 
@@ -109,10 +126,10 @@
     lines.forEach(function (line) {
       chain = chain.then(function () {
         pre.textContent += line + '\n';
-        return wait(line === '' ? 150 : 380);
+        return wait(line === '' ? 250 : 700);
       });
     });
-    return chain.then(function () { return wait(600); }).then(function () { return o; });
+    return chain.then(function () { return wait(1500); }).then(function () { return o; });
   }
 
   var BIOS = [
@@ -230,7 +247,9 @@
         if (b.dataset.a === 'editorconfig') { done(); return; }
         wrong[b.dataset.a] = true;
         b.disabled = true;
-        msg.textContent = b.dataset.a === 'tabs' ? 'Fel. Halva teamet har redan lämnat mötet.' : 'Fel. Nu har den andra halvan också gått.';
+        msg.textContent = Object.keys(wrong).length === 1
+          ? 'Fel. Halva teamet har redan lämnat mötet.'
+          : 'Fel. Nu har den andra halvan också gått.';
         if (wrong.tabs && wrong.spaces) {
           var ok = document.createElement('button');
           ok.type = 'button';

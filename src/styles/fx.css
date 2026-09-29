@@ -243,9 +243,10 @@
 
 .ach-toast {
   position: fixed;
-  left: 16px;
-  bottom: 16px;
+  top: 5rem;
+  right: 16px;
   z-index: 250;
+  pointer-events: none;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -272,8 +273,13 @@
 }
 .ach-text small { display: block; color: #b8b8c0; font-size: 0.75rem; }
 .ach-text strong { display: block; font-size: 0.95rem; }
-@keyframes ach-in { from { transform: translateY(140%); opacity: 0; } }
-@keyframes ach-out { to { transform: translateY(140%); opacity: 0; } }
+@keyframes ach-in { from { transform: translateX(120%); opacity: 0; } }
+@keyframes ach-out { to { transform: translateX(120%); opacity: 0; } }
+@media (max-width: 560px) {
+  .ach-toast { left: 16px; right: 16px; }
+  @keyframes ach-in { from { transform: translateY(-140%); opacity: 0; } }
+  @keyframes ach-out { to { transform: translateY(-140%); opacity: 0; } }
+}
 
 .ach-fireworks {
   position: fixed;
@@ -341,3 +347,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ach-toast, .ach-toast.out { animation: none; }
 }
+
+/* Terminalen i sudo-läge: root och # */
+.term.term-root { border-top-color: #ff6b5a; }
+.term.term-root .term-prompt { color: #ff6b5a; }

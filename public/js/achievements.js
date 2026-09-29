@@ -213,7 +213,8 @@
   // --- Finalen: Congratulations + certifikat + topplistan -------------------------
   var HOF_EDIT_URL = 'https://github.com/lilja85/christofferlilja.se/edit/main/src/data/hall-of-fame.json';
 
-  function celebrate() {
+  // openHof: visa "Ta plats på topplistan" utfälld (när man själv öppnar dialogen igen)
+  function celebrate(openHof) {
     if (document.querySelector('.ach-final')) return;
     var completed = completedAt() || Math.floor(Date.now() / 1000);
     var date = new Date(completed * 1000).toISOString().slice(0, 10);
@@ -231,7 +232,7 @@
       '<span>Unix epoch: <code>' + completed + '</code></span>' +
       '<span class="ach-issuer">Utfärdare: Christoffer Lilja (och Claude)</span>' +
       '</div>' +
-      '<details class="ach-hof">' +
+      '<details class="ach-hof"' + (openHof ? ' open' : '') + '>' +
       '<summary>🏅 Ta plats på topplistan</summary>' +
       '<p>Topplistan fylls på via pull requests. Skriv ditt GitHub-användarnamn, kopiera raden och lägg till den ' +
       'sist i <code>hall-of-fame.json</code> från det kontot.</p>' +
@@ -282,7 +283,12 @@
     o.addEventListener('click', function (e) { if (e.target === o) close(); });
     // Som i Outlook: för musen över "Congratulations" så smäller det igen
     o.querySelector('.ach-congrats').addEventListener('mouseenter', function () { fireworks(2500); });
-    o.querySelector('.ach-close').focus();
+    // Fokus flyttas efter att tangenttrycket som öppnade dialogen är klart. Annars kan Enter
+    // "trycka" på Stäng i samma tryck och dialogen stängs direkt.
+    setTimeout(function () {
+      var target = openHof ? o.querySelector('.ach-hof input') : o.querySelector('.ach-close');
+      if (target) target.focus();
+    }, 50);
   }
 
   window.Eggs = {
@@ -300,7 +306,9 @@
     var counter = document.getElementById('egg-counter');
     if (counter) {
       counter.addEventListener('click', function () {
-        document.dispatchEvent(new CustomEvent('eggs:show'));
+        // Alla hittade: öppna certifikatet (och topplistan). Annars listan i terminalen.
+        if (found.length === EGGS.length) celebrate(true);
+        else document.dispatchEvent(new CustomEvent('eggs:show'));
       });
     }
     var egg = document.body.dataset.egg;

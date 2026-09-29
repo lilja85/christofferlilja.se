@@ -219,6 +219,18 @@
     var completed = completedAt() || Math.floor(Date.now() / 1000);
     var date = new Date(completed * 1000).toISOString().slice(0, 10);
     fireworks(6000);
+    // "Berätta för mig": för den som inte vill (eller kan) göra en PR själv
+    function mailHref(hofLine) {
+      var body = 'Hej Christoffer!\n\n' +
+        'Jag hittade alla ' + EGGS.length + ' påskägg på christofferlilja.se (klarad ' + date + ').\n' +
+        'Jag är inte tillräckligt l33t för GitHub, snälla snälla lägg till mig i topplistan! 🙏\n\n' +
+        (hofLine
+          ? 'Min rad till hall-of-fame.json:\n' + hofLine + '\n'
+          : 'Mitt GitHub-användarnamn: \n(completed: ' + completed + ')\n');
+      return 'mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
+        '&body=' + encodeURIComponent(body);
+    }
+
     var o = document.createElement('div');
     o.className = 'ach-final';
     o.innerHTML =
@@ -245,8 +257,7 @@
       'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
       '</details>' +
       '<p class="ach-actions">' +
-      '<a href="mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
-      '&body=' + encodeURIComponent('Klarad ' + date + ' (epoch ' + completed + ')') + '">Berätta för mig</a>' +
+      '<a class="ach-mail" href="' + mailHref(null) + '">Berätta för mig</a>' +
       '<button type="button" class="ach-close">Stäng</button>' +
       '</p></div>';
     document.body.appendChild(o);
@@ -254,8 +265,10 @@
     var input = o.querySelector('.ach-hof input');
     var line = o.querySelector('.ach-hof-line');
     var copy = o.querySelector('.ach-copy');
+    var mail = o.querySelector('.ach-mail');
     var render = function () {
       var handle = input.value.trim().replace(/^@/, '');
+      mail.href = mailHref(null);
       if (!handle) { line.textContent = ''; copy.disabled = true; return; }
       if (!GITHUB_HANDLE.test(handle)) {
         line.textContent = 'Det där ser inte ut som ett GitHub-användarnamn.';
@@ -264,7 +277,9 @@
       }
       hofId(handle, completed).then(function (id) {
         if (input.value.trim().replace(/^@/, '') !== handle) return; // hann skriva vidare
-        line.textContent = '  { "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
+        var hofLine = '{ "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
+        line.textContent = '  ' + hofLine;
+        mail.href = mailHref(hofLine);
         copy.disabled = false;
       });
     };

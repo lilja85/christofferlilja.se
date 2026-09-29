@@ -223,7 +223,7 @@
     function mailHref(hofLine) {
       var body = 'Hej Christoffer!\n\n' +
         'Uppdrag slutfört: alla ' + EGGS.length + ' påskägg på christofferlilja.se är hittade (klarad ' + date + ').\n' +
-        'Inga ägg skadades under jakten. Ett par vim-sessioner gjorde det kanske.\n\n' +
+        'Inga ägg skadades under jakten. Mitt tålamod med vim däremot …\n\n' +
         'Jag är tyvärr inte tillräckligt l33t för att göra en pull request, så jag tar den analoga vägen.\n' +
         'Snälla snälla lägg till mig i topplistan! 🙏\n\n' +
         (hofLine

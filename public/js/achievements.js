@@ -114,9 +114,9 @@
 
   // Kontrollsumma för topplisteposten. Samma beräkning i scripts/validate-hall-of-fame.mjs.
   // Den fångar slarv, inte fusk: koden är publik, så ärlighet är en del av spelet.
+  var HOF_SALT = 'Hello, friend.'; // Elliot i Mr. Robot. Samma i scripts/validate-hall-of-fame.mjs.
   function hofId(github, completed) {
-    var ids = EGGS.map(function (e) { return e.id; }).sort().join(',');
-    var input = github.toLowerCase() + '|' + completed + '|' + ids;
+    var input = github.toLowerCase() + '|' + completed + '|' + HOF_SALT;
     if (!window.crypto || !crypto.subtle) return Promise.resolve('00000000');
     return crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)).then(function (buf) {
       return Array.prototype.map.call(new Uint8Array(buf).slice(0, 4), function (b) {

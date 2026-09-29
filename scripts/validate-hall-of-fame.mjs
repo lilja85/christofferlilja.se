@@ -17,13 +17,11 @@ const KEYS = ['completed', 'github', 'id'];
 const errors = [];
 const fail = (msg) => errors.push(msg);
 
-// Äggens id läses från achievements.js, så att listan bara finns på ett ställe
-const eggIds = [...readFileSync('public/js/achievements.js', 'utf8').matchAll(/\{ id: '([^']+)'/g)].map((m) => m[1]);
-if (eggIds.length < 1) throw new Error('Hittade inga ägg i public/js/achievements.js');
-const eggList = [...eggIds].sort().join(',');
+// Fast fras i kontrollsumman (Elliot i Mr. Robot). Samma som HOF_SALT i public/js/achievements.js.
+const HOF_SALT = 'Hello, friend.';
 
 export function hofId(github, completed) {
-  return createHash('sha256').update(`${github.toLowerCase()}|${completed}|${eggList}`).digest('hex').slice(0, 8);
+  return createHash('sha256').update(`${github.toLowerCase()}|${completed}|${HOF_SALT}`).digest('hex').slice(0, 8);
 }
 
 function parse(text, label) {
@@ -65,21 +63,23 @@ entries.forEach((e, i) => {
   seen.add(lower);
 });
 
-// Extra kontroller i pull requests
-const { PR_AUTHOR, BASE_REF } = process.env;
-if (PR_AUTHOR && BASE_REF) {
-  const git = (...args) => execFileSync('git', args, { encoding: 'utf8' });
+// Extra kontroller i pull requests från andra än repots ägare, när topplistan redan finns på basbranchen.
+// Ägarens egna PR:er (t.ex. som ändrar kod eller själva topplistefunktionen) valideras bara på format och id.
+const { PR_AUTHOR, BASE_REF, REPO_OWNER } = process.env;
+const fromOwner = PR_AUTHOR && REPO_OWNER && PR_AUTHOR.toLowerCase() === REPO_OWNER.toLowerCase();
+if (PR_AUTHOR && BASE_REF && !fromOwner) {
+  // stderr fångas, så att git inte skriver "fatal:" i loggen för fel som hanteras här
+  const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const changed = git('diff', '--name-only', `origin/${BASE_REF}...HEAD`).split('\n').filter(Boolean);
-  if (changed.includes(FILE)) {
+  let base = null;
+  try {
+    base = parse(git('show', `origin/${BASE_REF}:${FILE}`), `${FILE} på ${BASE_REF}`);
+  } catch (e) {
+    if (!/does not exist|exists on disk, but not in/.test(String(e.stderr || e.message))) throw e;
+  }
+  if (base && changed.includes(FILE)) {
     const others = changed.filter((f) => f !== FILE);
     if (others.length) fail(`En PR till topplistan får bara ändra ${FILE}, men ändrar också: ${others.join(', ')}`);
-
-    let base = [];
-    try {
-      base = parse(git('show', `origin/${BASE_REF}:${FILE}`), `${FILE} på ${BASE_REF}`);
-    } catch (e) {
-      if (!/does not exist|exists on disk, but not in/.test(String(e.stderr || e.message))) throw e;
-    }
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     base.forEach((b, i) => {
       if (!same(b, entries[i])) fail(`Post ${i + 1} (${b.github}) har ändrats eller tagits bort. Lägg bara till din egen rad, sist.`);

@@ -105,24 +105,35 @@ html[data-theme='2008'] .focus li {
 html[data-theme='2008'] .focus span { font-size: 12px; }
 html[data-theme='2008'] .posts li { border-bottom: 1px dotted #888888; }
 
-/* Originalets innehållsyta är 600 px, bilderna har 20 px skugga på var sida */
+/* Originalets innehållsyta är 600 px i en 640 px-ram: bilderna har 20 px kantlinje och skugga på var sida.
+   Sidfoten ligger i samma ram, med bakgrundsbilden bakom och sin egen grå yta bara innanför kanterna. */
 html[data-theme='2008'] .site-footer {
   position: relative;
-  width: 600px;
+  width: 640px;
   margin: 0 auto 20px;
-  padding: 10px 20px;
-  border-top: 1px dotted #888888;
-  background: #e3e3e3;
+  padding: 10px 40px;
+  border-top: 0;
+  background:
+    linear-gradient(to right, transparent 20px, #e3e3e3 20px, #e3e3e3 620px, transparent 620px),
+    url('/retro/content_bg.png') repeat-y top;
   color: #333333;
   text-align: center;
   font-size: 12px;
 }
+html[data-theme='2008'] .site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  border-top: 1px dotted #888888;
+}
 html[data-theme='2008'] .site-footer::after {
   content: '';
   position: absolute;
-  left: -20px;
+  left: 0;
   bottom: -20px;
-  width: 640px;
+  width: 100%;
   height: 20px;
   background: url('/retro/footer.png') no-repeat bottom;
 }
@@ -143,9 +154,13 @@ html[data-theme='2008'] .retro-only { display: block; }
 
 /* Rullande text à la <marquee> */
 html[data-theme='2008'] .retro-marquee {
-  width: 600px;
+  width: 640px;
   max-width: 100%;
   margin: 0 auto;
+  padding: 0 20px;
+  background: url('/retro/content_bg.png') repeat-y top;
+}
+.retro-marquee-inner {
   overflow: hidden;
   white-space: nowrap;
   background: #000080;
@@ -277,4 +292,13 @@ html[data-theme='2008'] .theme-toggle.rate-limited::after {
   content: 'Retry-After: ' attr(data-retry) ' s';
   position: static; min-width: 0; height: auto; padding: 0;
   background: none; color: #000000; border-radius: 0; font: 11px Tahoma, Verdana, sans-serif;
+}
+
+/* Pixelglasögonen i sudo-läge: den fyrkantiga 2008-avataren har ram och padding */
+html[data-theme='2008'] .deal-glasses { top: 45%; left: 26%; }
+
+@media (max-width: 640px) {
+  html[data-theme='2008'] .retro-marquee { padding: 0; background: none; }
+  html[data-theme='2008'] .site-footer { width: 100%; padding: 10px 16px; background: #e3e3e3; }
+  html[data-theme='2008'] .site-footer::before { left: 0; right: 0; }
 }

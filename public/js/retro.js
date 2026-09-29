@@ -61,8 +61,8 @@
     var nav = header && header.querySelector('nav');
 
     var marquee = el('div', 'retro-marquee',
-      '<span>~*~ Välkommen till min hemsida!!! ~*~ Sidan visas bäst i 1024x768 med Firefox 2.0 ~*~ ' +
-      'Glöm inte att signera gästboken!!! ~*~ Nu med Web 2.0 och AJAX ~*~ Senaste nytt: labbet är öppnat! ~*~</span>');
+      '<div class="retro-marquee-inner"><span>~*~ Välkommen till min hemsida!!! ~*~ Sidan visas bäst i 1024x768 med Firefox 2.0 ~*~ ' +
+      'Glöm inte att signera gästboken!!! ~*~ Nu med Web 2.0 och AJAX ~*~ Senaste nytt: labbet är öppnat! ~*~</span></div>');
     header.insertAdjacentElement('afterend', marquee);
 
     var construction = el('div', 'retro-construction',

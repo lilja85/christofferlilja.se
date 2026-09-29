@@ -200,6 +200,7 @@
     }
     root.classList.add('sudo');
     updateLabel();
+    term.refresh();
     var left = SUDO_SECONDS;
     toast('[PIM] Rollen "Global Nörd" aktiverad i ' + left + ' s. Motivering: "ville bara testa".', 5000);
     auditLog('[PIM] Aktivering godkänd: rollen "Global Nörd" i ' + SUDO_SECONDS + ' s. Loggad för granskning.');
@@ -217,6 +218,7 @@
     root.classList.remove('sudo');
     stripTitle();
     updateLabel();
+    term.refresh();
     if (reason === 'button') {
       egg('least-privilege');
       toast('Tack för att du minskar dina behörigheter! Least privilege när det är som bäst. 🔒🙏', 5000);
@@ -255,7 +257,7 @@
       el.setAttribute('aria-label', 'Terminal');
       el.hidden = true;
       el.innerHTML =
-        '<div class="term-bar"><span>besokare@christofferlilja.se: ~</span>' +
+        '<div class="term-bar"><span class="term-title">besokare@christofferlilja.se: ~</span>' +
         '<button type="button" class="term-close" aria-label="Stäng terminalen">×</button></div>' +
         '<div class="term-out" aria-live="polite"></div>' +
         '<label class="term-line"><span class="term-prompt">$</span>' +
@@ -302,13 +304,26 @@
       return chain;
     }
 
+    function isRoot() { return root.classList.contains('sudo'); }
+
+    // Titel och prompt följer behörigheten: besokare/$ normalt, root/# i sudo-läge
+    function refresh() {
+      if (!el) return;
+      el.querySelector('.term-title').textContent = (isRoot() ? 'root' : 'besokare') + '@christofferlilja.se: ~';
+      el.querySelector('.term-prompt').textContent = isRoot() ? '#' : '$';
+      el.classList.toggle('term-root', isRoot());
+    }
+
     function open() {
       egg('terminal');
       if (!el) build();
+      refresh();
       el.hidden = false;
       input.focus();
     }
     function close() {
+      // Stänger man terminalen mitt i en bekräftelse räknas det som nej
+      if (confirming) confirming(false);
       if (el) el.hidden = true;
     }
 
@@ -318,14 +333,40 @@
       if (!b && input && !el.hidden) input.focus();
     }
 
+    // Bekräftelse för farliga kommandon, som apt: [j/N]. Bara ett uttryckligt j utför det;
+    // n, tom rad, annat svar eller att stänga terminalen avbryter. Ingen tidspress.
+    var confirming = null;
+    function askConfirm(question, onYes, onNo) {
+      print(question + ' [j/N]');
+      confirming = function (yes) {
+        confirming = null;
+        (yes ? onYes : onNo)();
+      };
+    }
+
     function onKey(e) {
       if (busy) return;
+      if (confirming && e.key === 'Enter') {
+        var answer = input.value.trim().toLowerCase();
+        input.value = '';
+        print('> ' + answer, 'cmd');
+        confirming(/^(j|ja|y|yes)$/.test(answer));
+        return;
+      }
       if (e.key === 'Enter') {
         var cmd = input.value;
         input.value = '';
+        print((isRoot() ? '# ' : '$ ') + cmd, 'cmd');
+        // History expansion som i bash: !! blir förra kommandot innan något körs.
+        // Historiken sparar den expanderade raden, så !! kan aldrig peka på sig självt.
+        if (/(^|\s)!!(\s|$)/.test(cmd)) {
+          var last = history[history.length - 1];
+          if (!last) { print('-bash: !!: event not found', 'err'); return; }
+          cmd = cmd.replace(/(^|\s)!!(?=\s|$)/g, function (m, pre) { return pre + last; });
+          print(cmd.trim(), 'dim');
+        }
         if (cmd.trim()) history.push(cmd.trim());
         histPos = history.length;
-        print('$ ' + cmd, 'cmd');
         var result = run(cmd.trim());
         if (result && typeof result.then === 'function') {
           setBusy(true);
@@ -471,6 +512,8 @@
     }
 
     function sudoCmd(args) {
+      // sudo sudo … är samma sak som sudo … (kan uppstå med sudo !!)
+      if (args[0] === 'sudo') return sudoCmd(args.slice(1));
       var first = args[0];
 
       if (first === '-k') {
@@ -488,15 +531,6 @@
         print('sudo: help: kommandot hittades inte. Menade du "sudo -l"?', 'err');
         return;
       }
-      if (first === '!!') {
-        var prev = history[history.length - 2];
-        if (!prev) { print('sudo: !!: inget tidigare kommando', 'err'); return; }
-        var prevArgs = prev.split(/\s+/);
-        if (prevArgs[0] === 'sudo') prevArgs.shift();
-        print('sudo ' + prevArgs.join(' '), 'dim');
-        return sudoCmd(prevArgs);
-      }
-
       if (Fx.isLocked()) {
         print('besökare finns inte i sudoers-filen. Den här incidenten kommer att rapporteras.', 'err');
         close();
@@ -544,11 +578,16 @@
         print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
         print('  git <kmd>     status | pull | merge <light|dark> | push | blame | remote -v');
         print('  achievements  hur många påskägg har du hittat?');
+        print('  ragequit      ge upp och börja om jakten');
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
+        if (isRoot()) {
+          print('root (tillfälligt, via PIM). Kom ihåg att lämna tillbaka behörigheten.');
+          return;
+        }
         print('besökare. Men sidan handlar om christoffer, DevSecOps-konsult och lösningsarkitekt i Jönköping.');
-        print('Grupper: besökare, nyfikna' + (root.classList.contains('sudo') ? ', root (tillfälligt)' : ''));
+        print('Grupper: besökare, nyfikna');
       },
       ls: function (args) {
         if (args[0] === 'lab' || args[0] === 'lab/') {
@@ -695,6 +734,7 @@
           else print('  ??? ' + e.hint, 'dim');
         });
         if (n === all.length) print('Alla hittade! Kör "achievements --celebrate" för att fira igen. 🎆');
+        if (n > 0) print('Vill du börja om? Kör "ragequit".', 'dim');
       },
       history: function () {
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
@@ -704,13 +744,34 @@
         var env = root.dataset.env === 'preview' ? 'förhandsvisning på Cloudflare Pages' : 'produktion på webbhotellet';
         print('ChristofferOS 2026 (Astro/statisk, ' + env + ') x86_64 – inga cookies, ingen spårning');
       },
-      pwd: function () { print('/home/besokare'); },
+      pwd: function () { print(isRoot() ? '/root' : '/home/besokare'); },
       cd: function () { print('cd: det finns ingenstans att gå. Det här är en statisk sida. 🙂', 'dim'); },
       clear: function () { out.textContent = ''; },
       exit: function () { close(); }
     };
 
     commands.trophies = commands.achievements;
+
+    // Ge upp och börja om: Aliens, en arkadnedräkning och Groundhog Day
+    commands.ragequit = function () {
+      if (!window.Eggs) return;
+      var n = window.Eggs.found().length;
+      var total = window.Eggs.all().length;
+      if (n === 0) {
+        print('Du har inte hittat några påskägg än. Man kan inte ge upp innan man ens börjat. 😉', 'dim');
+        return;
+      }
+      print('GAME OVER, MAN! GAME OVER!', 'err');
+      print('– Hudson, Aliens (1986)', 'dim');
+      askConfirm('Du har ' + n + '/' + total + ' påskägg. Ge upp och börja om från noll?', function () {
+        window.Eggs.reset();
+        print('INSERT COIN', 'wopr');
+        print('☀️ 06:00. "I Got You Babe" spelar på radion. Det är Groundhog Day igen,', 'log');
+        print('och alla ' + total + ' påskägg väntar på att hittas. Från början.', 'log');
+      }, function () {
+        print('Så ska det låta. Jakten fortsätter! 🥚', 'log');
+      });
+    };
 
     function run(line) {
       if (!line) return;
@@ -728,7 +789,7 @@
       commands.achievements([]);
     });
 
-    return { open: open, close: close, print: print };
+    return { open: open, close: close, print: print, refresh: refresh };
   })();
 
   if (Fx) Fx.afterLoad(auditLog);

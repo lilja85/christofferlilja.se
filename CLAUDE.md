@@ -52,7 +52,8 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   körs i CI och kontrollerar format, kontrollsumma (`id`, samma beräkning som `hofId` i `achievements.js`) och, i PR:er, att bara
   filen ändras, exakt en post tillkommer och att posten gäller PR-författaren. PR-kontrollerna gäller inte PR:er från
   repots ägare. Kontrollsumman bygger på en fast fras (`HOF_SALT`, "Hello, friend." från Mr. Robot), inte på äggen, så
-  nya ägg påverkar inte befintliga poster. Topplist-PR:er mergas manuellt av Christoffer.
+  nya ägg påverkar inte befintliga poster (formeln finns i `scripts/hof-id.mjs`). Topplist-PR:er mergas manuellt av Christoffer.
+  Den som mejlar via "Berätta för mig" läggs in med `node scripts/hof-add.mjs <github-alias> <completed>`, som räknar ut `id`.
 - CI kör `pull_request`, inte `pull_request_target`: fork-PR:er får inga secrets. Läs PR-data via `env`, aldrig direkt i `run:`.
 - Repot ska ha *Require approval for all external contributors* (Settings → Actions → General). Med standardvalet
   *first-time contributors* körs CI automatiskt för alla som fått en PR mergad, alltså alla på topplistan, och de kan

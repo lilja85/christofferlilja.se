@@ -729,7 +729,7 @@
         var all = window.Eggs.all();
         if (args[0] === '--reset') { window.Eggs.reset(); print('Alla påskägg är nollställda. Lycka till igen!', 'dim'); return; }
         if (args[0] === '--celebrate') {
-          if (window.Eggs.found().length === all.length) { close(); window.Eggs.celebrate(); }
+          if (window.Eggs.found().length === all.length) { close(); window.Eggs.celebrate(true); }
           else print('Nice try. Hitta alla först. 😉', 'err');
           return;
         }

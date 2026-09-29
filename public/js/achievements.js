@@ -114,7 +114,7 @@
 
   // Kontrollsumma för topplisteposten. Samma beräkning i scripts/validate-hall-of-fame.mjs.
   // Den fångar slarv, inte fusk: koden är publik, så ärlighet är en del av spelet.
-  var HOF_SALT = 'Hello, friend.'; // Elliot i Mr. Robot. Samma i scripts/validate-hall-of-fame.mjs.
+  var HOF_SALT = 'Hello, friend.'; // Elliot i Mr. Robot. Samma i scripts/hof-id.mjs.
   function hofId(github, completed) {
     var input = github.toLowerCase() + '|' + completed + '|' + HOF_SALT;
     if (!window.crypto || !crypto.subtle) return Promise.resolve('00000000');
@@ -213,11 +213,31 @@
   // --- Finalen: Congratulations + certifikat + topplistan -------------------------
   var HOF_EDIT_URL = 'https://github.com/lilja85/christofferlilja.se/edit/main/src/data/hall-of-fame.json';
 
-  function celebrate() {
+  // openHof: visa "Ta plats på topplistan" utfälld (när man själv öppnar dialogen igen)
+  function celebrate(openHof) {
     if (document.querySelector('.ach-final')) return;
     var completed = completedAt() || Math.floor(Date.now() / 1000);
     var date = new Date(completed * 1000).toISOString().slice(0, 10);
     fireworks(6000);
+    // "Berätta för mig": för den som inte vill (eller kan) göra en PR själv
+    function mailHref(hofLine) {
+      var body = 'Hej Christoffer!\n\n' +
+        'Uppdrag slutfört: alla ' + EGGS.length + ' påskägg på christofferlilja.se är hittade (klarad ' + date + ').\n' +
+        'Inga ägg skadades under jakten. Mitt tålamod med vim däremot …\n\n' +
+        'Jag är tyvärr inte tillräckligt l33t för att göra en pull request, så jag tar den analoga vägen.\n' +
+        'Snälla snälla lägg till mig i topplistan! 🙏\n\n' +
+        (hofLine
+          ? 'Här är min rad till hall-of-fame.json, kontrollsummerad och klar:\n' + hofLine + '\n\n'
+          : 'Jag glömde skriva mitt GitHub-alias i rutan, så här kommer det i stället:\n\n' +
+            'GitHub-alias: \n\n' +
+            'Jag lovar och svär att mitt GitHub-alias finns bifogat här ovanför.\n' +
+            '(Annars kan jag inte läggas in i topplistan, och det vore ju synd.)\n' +
+            'completed: ' + completed + '\n\n') +
+        'Hack the planet! 🌍';
+      return 'mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('🥚 20/20! Jag gör anspråk på min plats i Hall of Fame') +
+        '&body=' + encodeURIComponent(body);
+    }
+
     var o = document.createElement('div');
     o.className = 'ach-final';
     o.innerHTML =
@@ -228,10 +248,9 @@
       '<small>Certifikat</small>' +
       '<strong>Certified Easter Egg Hunter</strong>' +
       '<span>christofferlilja.se · klarad ' + date + '</span>' +
-      '<span>Unix epoch: <code>' + completed + '</code></span>' +
       '<span class="ach-issuer">Utfärdare: Christoffer Lilja (och Claude)</span>' +
       '</div>' +
-      '<details class="ach-hof">' +
+      '<details class="ach-hof"' + (openHof ? ' open' : '') + '>' +
       '<summary>🏅 Ta plats på topplistan</summary>' +
       '<p>Topplistan fylls på via pull requests. Skriv ditt GitHub-användarnamn, kopiera raden och lägg till den ' +
       'sist i <code>hall-of-fame.json</code> från det kontot.</p>' +
@@ -245,8 +264,7 @@
       'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
       '</details>' +
       '<p class="ach-actions">' +
-      '<a href="mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
-      '&body=' + encodeURIComponent('Klarad ' + date + ' (epoch ' + completed + ')') + '">Berätta för mig</a>' +
+      '<a class="ach-mail" href="' + mailHref(null) + '">Berätta för mig</a>' +
       '<button type="button" class="ach-close">Stäng</button>' +
       '</p></div>';
     document.body.appendChild(o);
@@ -254,8 +272,12 @@
     var input = o.querySelector('.ach-hof input');
     var line = o.querySelector('.ach-hof-line');
     var copy = o.querySelector('.ach-copy');
+    var mail = o.querySelector('.ach-mail');
+    // Mejlet får med den färdiga raden när ett giltigt alias är ifyllt, annars en tom rad för aliaset
+    function setMail(hofLine) { mail.href = mailHref(hofLine); }
     var render = function () {
       var handle = input.value.trim().replace(/^@/, '');
+      setMail(null);
       if (!handle) { line.textContent = ''; copy.disabled = true; return; }
       if (!GITHUB_HANDLE.test(handle)) {
         line.textContent = 'Det där ser inte ut som ett GitHub-användarnamn.';
@@ -264,7 +286,9 @@
       }
       hofId(handle, completed).then(function (id) {
         if (input.value.trim().replace(/^@/, '') !== handle) return; // hann skriva vidare
-        line.textContent = '  { "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
+        var hofLine = '{ "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
+        line.textContent = '  ' + hofLine;
+        setMail(hofLine);
         copy.disabled = false;
       });
     };
@@ -282,7 +306,12 @@
     o.addEventListener('click', function (e) { if (e.target === o) close(); });
     // Som i Outlook: för musen över "Congratulations" så smäller det igen
     o.querySelector('.ach-congrats').addEventListener('mouseenter', function () { fireworks(2500); });
-    o.querySelector('.ach-close').focus();
+    // Fokus flyttas efter att tangenttrycket som öppnade dialogen är klart. Annars kan Enter
+    // "trycka" på Stäng i samma tryck och dialogen stängs direkt.
+    setTimeout(function () {
+      var target = openHof ? o.querySelector('.ach-hof input') : o.querySelector('.ach-close');
+      if (target) target.focus();
+    }, 50);
   }
 
   window.Eggs = {
@@ -300,7 +329,9 @@
     var counter = document.getElementById('egg-counter');
     if (counter) {
       counter.addEventListener('click', function () {
-        document.dispatchEvent(new CustomEvent('eggs:show'));
+        // Alla hittade: öppna certifikatet (och topplistan). Annars listan i terminalen.
+        if (found.length === EGGS.length) celebrate(true);
+        else document.dispatchEvent(new CustomEvent('eggs:show'));
       });
     }
     var egg = document.body.dataset.egg;

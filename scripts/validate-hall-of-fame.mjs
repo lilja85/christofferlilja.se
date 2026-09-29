@@ -5,7 +5,6 @@
 // Kontrollsumman beräknas som i public/js/achievements.js (hofId). Den fångar slarv, inte fusk:
 // sajten är statisk och koden publik, så jakten i sig är ett ärlighetssystem. Identiteten är däremot
 // verifierad, eftersom posten måste komma från samma GitHub-konto som den gäller.
-import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
@@ -17,12 +16,7 @@ const KEYS = ['completed', 'github', 'id'];
 const errors = [];
 const fail = (msg) => errors.push(msg);
 
-// Fast fras i kontrollsumman (Elliot i Mr. Robot). Samma som HOF_SALT i public/js/achievements.js.
-const HOF_SALT = 'Hello, friend.';
-
-export function hofId(github, completed) {
-  return createHash('sha256').update(`${github.toLowerCase()}|${completed}|${HOF_SALT}`).digest('hex').slice(0, 8);
-}
+import { hofId } from './hof-id.mjs';
 
 function parse(text, label) {
   let data;

@@ -101,7 +101,8 @@ Och fuskar man så här hör man inte hemma på topplistan (se Hall of fame neda
 Klarat alla 20 påskägg? Då kan du ta plats på topplistan (`leaderboard` i terminalen, syns efter första ägget).
 Topplistan är `src/data/hall-of-fame.json` och fylls på via pull requests, sorterad i den ordning man blev klar.
 
-1. Skriv ditt GitHub-användarnamn under *Ta plats på topplistan* i certifikatet. Du får en färdig rad:
+1. Öppna certifikatet (klicka på 🥚 20/20 i sidfoten eller kör `achievements --celebrate`) och skriv ditt
+   GitHub-användarnamn under *Ta plats på topplistan*. Du får en färdig rad:
    `{ "github": "octocat", "completed": 1790713134, "id": "62b47847" }`
 2. Lägg till raden **sist** i `src/data/hall-of-fame.json`, antingen via knappen *Öppna filen på GitHub*
    (GitHub forkar och skapar PR:en åt dig) eller med fork, branch och `git push` som vanligt.

@@ -114,7 +114,7 @@
 
   // Kontrollsumma för topplisteposten. Samma beräkning i scripts/validate-hall-of-fame.mjs.
   // Den fångar slarv, inte fusk: koden är publik, så ärlighet är en del av spelet.
-  var HOF_SALT = 'Hello, friend.'; // Elliot i Mr. Robot. Samma i scripts/validate-hall-of-fame.mjs.
+  var HOF_SALT = 'Hello, friend.'; // Elliot i Mr. Robot. Samma i scripts/hof-id.mjs.
   function hofId(github, completed) {
     var input = github.toLowerCase() + '|' + completed + '|' + HOF_SALT;
     if (!window.crypto || !crypto.subtle) return Promise.resolve('00000000');
@@ -222,10 +222,19 @@
     // "Berätta för mig": för den som inte vill (eller kan) göra en PR själv
     function mailHref(hofLine) {
       var body = 'Hej Christoffer!\n\n' +
-        'Jag hittade alla ' + EGGS.length + ' påskägg på christofferlilja.se (klarad ' + date + ').\n' +
-        'Jag är inte tillräckligt l33t för GitHub, snälla snälla lägg till mig i topplistan! 🙏\n\n' +
-        'Min rad till hall-of-fame.json:\n' + hofLine + '\n';
-      return 'mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
+        'Uppdrag slutfört: alla ' + EGGS.length + ' påskägg på christofferlilja.se är hittade (klarad ' + date + ').\n' +
+        'Inga ägg skadades under jakten. Ett par vim-sessioner gjorde det kanske.\n\n' +
+        'Jag är tyvärr inte tillräckligt l33t för att göra en pull request, så jag tar den analoga vägen.\n' +
+        'Snälla snälla lägg till mig i topplistan! 🙏\n\n' +
+        (hofLine
+          ? 'Här är min rad till hall-of-fame.json, kontrollsummerad och klar:\n' + hofLine + '\n\n'
+          : 'Jag glömde skriva mitt GitHub-alias i rutan, så här kommer det i stället:\n\n' +
+            'GitHub-alias: \n\n' +
+            'Jag lovar och svär att mitt GitHub-alias finns bifogat här ovanför.\n' +
+            '(Annars kan jag inte läggas in i topplistan, och det vore ju synd.)\n' +
+            'completed: ' + completed + '\n\n') +
+        'Hack the planet! 🌍';
+      return 'mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('🥚 20/20! Jag gör anspråk på min plats i Hall of Fame') +
         '&body=' + encodeURIComponent(body);
     }
 
@@ -255,7 +264,7 @@
       'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
       '</details>' +
       '<p class="ach-actions">' +
-      '<a class="ach-mail" role="link" aria-disabled="true" tabindex="0">Berätta för mig</a>' +
+      '<a class="ach-mail" href="' + mailHref(null) + '">Berätta för mig</a>' +
       '<button type="button" class="ach-close">Stäng</button>' +
       '</p></div>';
     document.body.appendChild(o);
@@ -264,26 +273,8 @@
     var line = o.querySelector('.ach-hof-line');
     var copy = o.querySelector('.ach-copy');
     var mail = o.querySelector('.ach-mail');
-    var hof = o.querySelector('.ach-hof');
-    function setMail(hofLine) {
-      if (hofLine) {
-        mail.href = mailHref(hofLine);
-        mail.removeAttribute('aria-disabled');
-      } else {
-        mail.removeAttribute('href');
-        mail.setAttribute('aria-disabled', 'true');
-      }
-    }
-    // Utan GitHub-namn: öppna topplistedelen och be om namnet i stället för att skicka ett ofullständigt mejl
-    function needHandle(e) {
-      if (mail.hasAttribute('href')) return;
-      if (e) e.preventDefault();
-      hof.open = true;
-      line.textContent = 'Skriv ditt GitHub-användarnamn först, så kommer din färdiga rad med i mejlet.';
-      input.focus();
-    }
-    mail.addEventListener('click', needHandle);
-    mail.addEventListener('keydown', function (e) { if (e.key === 'Enter') needHandle(e); });
+    // Mejlet får med den färdiga raden när ett giltigt alias är ifyllt, annars en tom rad för aliaset
+    function setMail(hofLine) { mail.href = mailHref(hofLine); }
     var render = function () {
       var handle = input.value.trim().replace(/^@/, '');
       setMail(null);

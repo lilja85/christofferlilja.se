@@ -384,5 +384,3 @@
 .ach-hof-note { color: #555555; font-size: 0.8rem; }
 .ach-actions button:disabled { opacity: 0.45; cursor: default; }
 
-.ach-mail { cursor: pointer; }
-.ach-mail[aria-disabled='true'] { opacity: 0.6; }

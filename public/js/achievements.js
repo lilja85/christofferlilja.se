@@ -224,9 +224,7 @@
       var body = 'Hej Christoffer!\n\n' +
         'Jag hittade alla ' + EGGS.length + ' påskägg på christofferlilja.se (klarad ' + date + ').\n' +
         'Jag är inte tillräckligt l33t för GitHub, snälla snälla lägg till mig i topplistan! 🙏\n\n' +
-        (hofLine
-          ? 'Min rad till hall-of-fame.json:\n' + hofLine + '\n'
-          : 'Mitt GitHub-användarnamn: \n(completed: ' + completed + ')\n');
+        'Min rad till hall-of-fame.json:\n' + hofLine + '\n';
       return 'mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
         '&body=' + encodeURIComponent(body);
     }
@@ -257,7 +255,7 @@
       'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
       '</details>' +
       '<p class="ach-actions">' +
-      '<a class="ach-mail" href="' + mailHref(null) + '">Berätta för mig</a>' +
+      '<a class="ach-mail" role="link" aria-disabled="true" tabindex="0">Berätta för mig</a>' +
       '<button type="button" class="ach-close">Stäng</button>' +
       '</p></div>';
     document.body.appendChild(o);
@@ -266,9 +264,29 @@
     var line = o.querySelector('.ach-hof-line');
     var copy = o.querySelector('.ach-copy');
     var mail = o.querySelector('.ach-mail');
+    var hof = o.querySelector('.ach-hof');
+    function setMail(hofLine) {
+      if (hofLine) {
+        mail.href = mailHref(hofLine);
+        mail.removeAttribute('aria-disabled');
+      } else {
+        mail.removeAttribute('href');
+        mail.setAttribute('aria-disabled', 'true');
+      }
+    }
+    // Utan GitHub-namn: öppna topplistedelen och be om namnet i stället för att skicka ett ofullständigt mejl
+    function needHandle(e) {
+      if (mail.hasAttribute('href')) return;
+      if (e) e.preventDefault();
+      hof.open = true;
+      line.textContent = 'Skriv ditt GitHub-användarnamn först, så kommer din färdiga rad med i mejlet.';
+      input.focus();
+    }
+    mail.addEventListener('click', needHandle);
+    mail.addEventListener('keydown', function (e) { if (e.key === 'Enter') needHandle(e); });
     var render = function () {
       var handle = input.value.trim().replace(/^@/, '');
-      mail.href = mailHref(null);
+      setMail(null);
       if (!handle) { line.textContent = ''; copy.disabled = true; return; }
       if (!GITHUB_HANDLE.test(handle)) {
         line.textContent = 'Det där ser inte ut som ett GitHub-användarnamn.';
@@ -279,7 +297,7 @@
         if (input.value.trim().replace(/^@/, '') !== handle) return; // hann skriva vidare
         var hofLine = '{ "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
         line.textContent = '  ' + hofLine;
-        mail.href = mailHref(hofLine);
+        setMail(hofLine);
         copy.disabled = false;
       });
     };

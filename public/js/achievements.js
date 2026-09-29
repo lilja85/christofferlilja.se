@@ -81,14 +81,48 @@
     notify(egg, found.length);
     console.log('%c🏆 Achievement unlocked: ' + egg.title + ' (' + found.length + '/' + EGGS.length + ')',
       'color:#b48cff;font-family:monospace');
-    if (found.length === EGGS.length) setTimeout(celebrate, 1500);
+    if (found.length === EGGS.length) {
+      completedAt(); // sätter tidsstämpeln första gången
+      setTimeout(celebrate, 1500);
+    }
     return true;
   }
 
   function reset() {
     found = [];
     save(found);
+    try { localStorage.removeItem(COMPLETED_KEY); } catch (e) {}
     updateCounter();
+  }
+
+  // --- Topplistan (src/data/hall-of-fame.json) ----------------------------------
+  // Tidsstämpeln för när alla ägg var hittade, i unix-sekunder. Sätts en gång.
+  var COMPLETED_KEY = 'eggs-completed';
+  function completedAt() {
+    if (found.length !== EGGS.length) return null;
+    var t = null;
+    try { t = parseInt(localStorage.getItem(COMPLETED_KEY) || '', 10); } catch (e) {}
+    if (!t) {
+      t = Math.floor(Date.now() / 1000);
+      try { localStorage.setItem(COMPLETED_KEY, String(t)); } catch (e) {}
+    }
+    return t;
+  }
+
+  // Samma regler som GitHub för användarnamn
+  var GITHUB_HANDLE = /^(?!-)(?!.*--)[A-Za-z0-9-]{1,39}(?<!-)$/;
+
+  // Kontrollsumma för topplisteposten. Samma beräkning i scripts/validate-hall-of-fame.mjs.
+  // Den fångar slarv, inte fusk: koden är publik, så ärlighet är en del av spelet.
+  var HOF_SALT = 'Hello, friend.'; // Elliot i Mr. Robot. Samma i scripts/validate-hall-of-fame.mjs.
+  function hofId(github, completed) {
+    var input = github.toLowerCase() + '|' + completed + '|' + HOF_SALT;
+    if (!window.crypto || !crypto.subtle) return Promise.resolve('00000000');
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf).slice(0, 4), function (b) {
+        return b.toString(16).padStart(2, '0');
+      }).join('');
+    });
   }
 
   // --- Fyrverkerier ------------------------------------------------------------
@@ -176,50 +210,79 @@
     requestAnimationFrame(frame);
   }
 
-  // --- Finalen: Congratulations + certifikat -----------------------------------
-  function certId(date) {
-    var input = found.slice().sort().join(',') + '|' + date;
-    if (!window.crypto || !crypto.subtle) return Promise.resolve('00000000');
-    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)).then(function (buf) {
-      return Array.prototype.map.call(new Uint8Array(buf).slice(0, 4), function (b) {
-        return b.toString(16).padStart(2, '0');
-      }).join('');
-    });
-  }
+  // --- Finalen: Congratulations + certifikat + topplistan -------------------------
+  var HOF_EDIT_URL = 'https://github.com/lilja85/christofferlilja.se/edit/main/src/data/hall-of-fame.json';
 
   function celebrate() {
     if (document.querySelector('.ach-final')) return;
-    var date = new Date().toISOString().slice(0, 10);
+    var completed = completedAt() || Math.floor(Date.now() / 1000);
+    var date = new Date(completed * 1000).toISOString().slice(0, 10);
     fireworks(6000);
-    certId(date).then(function (id) {
-      var o = document.createElement('div');
-      o.className = 'ach-final';
-      o.innerHTML =
-        '<div class="ach-card" role="dialog" aria-modal="true" aria-labelledby="ach-congrats">' +
-        '<h2 id="ach-congrats"><span class="ach-congrats">Congratulations!</span></h2>' +
-        '<p>Du har hittat alla ' + EGGS.length + ' påskägg på christofferlilja.se.</p>' +
-        '<div class="ach-cert">' +
-        '<small>Certifikat</small>' +
-        '<strong>Certified Easter Egg Hunter</strong>' +
-        '<span>christofferlilja.se · utfärdat ' + date + '</span>' +
-        '<span>Verifierings-id: <code>' + id + '</code></span>' +
-        '<span class="ach-issuer">Utfärdare: Christoffer Lilja (och Claude)</span>' +
-        '</div>' +
-        '<p class="ach-actions">' +
-        '<a href="mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
-        '&body=' + encodeURIComponent('Verifierings-id: ' + id + ' (' + date + ')') + '">Berätta för mig</a>' +
-        '<button type="button">Stäng</button>' +
-        '</p></div>';
-      document.body.appendChild(o);
-      var close = function () { o.remove(); document.removeEventListener('keydown', onKey, true); };
-      var onKey = function (e) { if (e.key === 'Escape') close(); };
-      document.addEventListener('keydown', onKey, true);
-      o.querySelector('button').addEventListener('click', close);
-      o.addEventListener('click', function (e) { if (e.target === o) close(); });
-      // Som i Outlook: för musen över "Congratulations" så smäller det igen
-      o.querySelector('.ach-congrats').addEventListener('mouseenter', function () { fireworks(2500); });
-      o.querySelector('button').focus();
+    var o = document.createElement('div');
+    o.className = 'ach-final';
+    o.innerHTML =
+      '<div class="ach-card" role="dialog" aria-modal="true" aria-labelledby="ach-congrats">' +
+      '<h2 id="ach-congrats"><span class="ach-congrats">Congratulations!</span></h2>' +
+      '<p>Du har hittat alla ' + EGGS.length + ' påskägg på christofferlilja.se.</p>' +
+      '<div class="ach-cert">' +
+      '<small>Certifikat</small>' +
+      '<strong>Certified Easter Egg Hunter</strong>' +
+      '<span>christofferlilja.se · klarad ' + date + '</span>' +
+      '<span>Unix epoch: <code>' + completed + '</code></span>' +
+      '<span class="ach-issuer">Utfärdare: Christoffer Lilja (och Claude)</span>' +
+      '</div>' +
+      '<details class="ach-hof">' +
+      '<summary>🏅 Ta plats på topplistan</summary>' +
+      '<p>Topplistan fylls på via pull requests. Skriv ditt GitHub-användarnamn, kopiera raden och lägg till den ' +
+      'sist i <code>hall-of-fame.json</code> från det kontot.</p>' +
+      '<label>GitHub-användarnamn <input type="text" autocomplete="username" spellcheck="false" placeholder="octocat" /></label>' +
+      '<pre class="ach-hof-line" aria-live="polite"></pre>' +
+      '<p class="ach-actions ach-hof-actions">' +
+      '<button type="button" class="ach-copy" disabled>Kopiera raden</button>' +
+      '<a href="' + HOF_EDIT_URL + '" target="_blank" rel="noopener">Öppna filen på GitHub</a>' +
+      '</p>' +
+      '<p class="ach-hof-note">GitHub forkar repot och skapar PR:en åt dig. CI kontrollerar att raden stämmer och att ' +
+      'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
+      '</details>' +
+      '<p class="ach-actions">' +
+      '<a href="mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('Jag hittade alla påskägg!') +
+      '&body=' + encodeURIComponent('Klarad ' + date + ' (epoch ' + completed + ')') + '">Berätta för mig</a>' +
+      '<button type="button" class="ach-close">Stäng</button>' +
+      '</p></div>';
+    document.body.appendChild(o);
+
+    var input = o.querySelector('.ach-hof input');
+    var line = o.querySelector('.ach-hof-line');
+    var copy = o.querySelector('.ach-copy');
+    var render = function () {
+      var handle = input.value.trim().replace(/^@/, '');
+      if (!handle) { line.textContent = ''; copy.disabled = true; return; }
+      if (!GITHUB_HANDLE.test(handle)) {
+        line.textContent = 'Det där ser inte ut som ett GitHub-användarnamn.';
+        copy.disabled = true;
+        return;
+      }
+      hofId(handle, completed).then(function (id) {
+        if (input.value.trim().replace(/^@/, '') !== handle) return; // hann skriva vidare
+        line.textContent = '  { "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
+        copy.disabled = false;
+      });
+    };
+    input.addEventListener('input', render);
+    copy.addEventListener('click', function () {
+      var text = line.textContent.trim();
+      var done = function () { copy.textContent = 'Kopierad ✓'; setTimeout(function () { copy.textContent = 'Kopiera raden'; }, 2000); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
     });
+
+    var close = function () { o.remove(); document.removeEventListener('keydown', onKey, true); };
+    var onKey = function (e) { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey, true);
+    o.querySelector('.ach-close').addEventListener('click', close);
+    o.addEventListener('click', function (e) { if (e.target === o) close(); });
+    // Som i Outlook: för musen över "Congratulations" så smäller det igen
+    o.querySelector('.ach-congrats').addEventListener('mouseenter', function () { fireworks(2500); });
+    o.querySelector('.ach-close').focus();
   }
 
   window.Eggs = {
@@ -228,7 +291,8 @@
     celebrate: celebrate,
     all: function () { return EGGS.slice(); },
     found: function () { return found.slice(); },
-    isFound: function (id) { return found.indexOf(id) !== -1; }
+    isFound: function (id) { return found.indexOf(id) !== -1; },
+    completedAt: completedAt
   };
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -351,3 +351,33 @@
 /* Terminalen i sudo-läge: root och # */
 .term.term-root { border-top-color: #ff6b5a; }
 .term.term-root .term-prompt { color: #ff6b5a; }
+
+/* Topplistan i finalen */
+.ach-hof { margin: 0 0 1rem; text-align: left; font-size: 0.9rem; }
+.ach-hof summary { cursor: pointer; font-weight: 600; text-align: center; }
+.ach-hof p { margin: 0.5rem 0; }
+.ach-hof label { display: grid; gap: 0.25rem; font-weight: 600; }
+.ach-hof input {
+  padding: 0.4rem 0.6rem;
+  font: inherit;
+  color: #1d1d1f;
+  background: #ffffff;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+  color-scheme: light;
+}
+.ach-hof-line {
+  min-height: 1.5em;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: #f4f4f4;
+  color: #1d1d1f;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ach-hof-line:empty { display: none; }
+.ach-hof-note { color: #555555; font-size: 0.8rem; }
+.ach-actions button:disabled { opacity: 0.45; cursor: default; }

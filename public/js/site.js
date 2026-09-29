@@ -240,6 +240,11 @@
     var dataEl = document.getElementById('lab-data');
     if (dataEl) labPosts = JSON.parse(dataEl.textContent || '[]');
   } catch (e) {}
+  var hallOfFame = [];
+  try {
+    var hofEl = document.getElementById('hof-data');
+    if (hofEl) hallOfFame = JSON.parse(hofEl.textContent || '[]');
+  } catch (e) {}
 
   var Fx = window.Fx;
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -380,7 +385,9 @@
         e.preventDefault();
       } else if (e.key === 'Tab') {
         e.preventDefault();
-        var matches = Object.keys(commands).filter(function (c) { return c.indexOf(input.value) === 0; });
+        var matches = Object.keys(commands).filter(function (c) {
+          return c.indexOf(input.value) === 0 && !(LOCKED[c] && !LOCKED[c]());
+        });
         if (matches.length === 1) input.value = matches[0] + ' ';
         else if (matches.length > 1) print(matches.join('  '), 'dim');
       } else if (e.key === 'Escape') {
@@ -579,6 +586,7 @@
         print('  git <kmd>     status | pull | merge <light|dark> | push | blame | remote -v');
         print('  achievements  hur många påskägg har du hittat?');
         print('  ragequit      ge upp och börja om jakten');
+        if (hofUnlocked()) print('  leaderboard   topplistan (hall of fame)');
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
@@ -734,7 +742,7 @@
           else print('  ??? ' + e.hint, 'dim');
         });
         if (n === all.length) print('Alla hittade! Kör "achievements --celebrate" för att fira igen. 🎆');
-        if (n > 0) print('Vill du börja om? Kör "ragequit".', 'dim');
+        if (n > 0) print('🏅 Topplista: kör "leaderboard". Vill du börja om? Kör "ragequit".', 'dim');
       },
       history: function () {
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
@@ -751,6 +759,30 @@
     };
 
     commands.trophies = commands.achievements;
+
+    // Topplistan finns först när man hittat ett ägg. Innan dess låtsas kommandot inte finnas.
+    function hofUnlocked() { return !!(window.Eggs && window.Eggs.found().length > 0); }
+    function formatEpoch(t) { return new Date(t * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'; }
+    commands.leaderboard = function () {
+      print('🏅 Hall of fame: först till kvarn med alla ' + window.Eggs.all().length + ' påskägg');
+      var list = hallOfFame.slice().sort(function (a, b) { return a.completed - b.completed; });
+      if (!list.length) {
+        print('  Ingen har tagit plats än. Bli först!', 'dim');
+      }
+      list.forEach(function (e, i) {
+        var medal = ['🥇', '🥈', '🥉'][i] || '  ';
+        printLink(String(i + 1).padStart(3, ' ') + '. ' + medal + ' @' + e.github + '   ' + formatEpoch(e.completed) + ' (' + e.completed + ')',
+          'https://github.com/' + encodeURIComponent(e.github));
+      });
+      var mine = window.Eggs.completedAt();
+      if (mine) {
+        print('Du klarade jakten ' + formatEpoch(mine) + '. Finns du inte med? Kör "achievements --celebrate" och ta plats via en PR.', 'dim');
+      } else {
+        print('Hitta alla påskägg, så kan du ta plats via en pull request.', 'dim');
+      }
+    };
+    commands.hof = commands.leaderboard;
+    var LOCKED = { leaderboard: hofUnlocked, hof: hofUnlocked };
 
     // Ge upp och börja om: Aliens, en arkadnedräkning och Groundhog Day
     commands.ragequit = function () {
@@ -778,6 +810,7 @@
       var parts = line.split(/\s+/);
       var name = parts[0].toLowerCase();
       var fn = commands[name];
+      if (fn && LOCKED[name] && !LOCKED[name]()) fn = null;
       if (fn) return fn(parts.slice(1));
       print(name + ': kommandot hittades inte. Skriv "help".', 'err');
     }

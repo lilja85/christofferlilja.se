@@ -48,6 +48,16 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   i `localStorage.eggs`. Ett nytt ägg läggs till där och låses upp med `window.Eggs.unlock('id')` där det utlöses.
   Antalet visas i terminalen (`achievements`), sidfoten och konsolhälsningen, så uppdatera "20" i konsoltexten om antalet ändras.
   När alla är hittade kommer fyrverkerier och ett certifikat (`Eggs.celebrate()`).
+- **Topplistan (hall of fame):** `src/data/hall-of-fame.json`, fylls på via PR:er från besökare. `scripts/validate-hall-of-fame.mjs`
+  körs i CI och kontrollerar format, kontrollsumma (`id`, samma beräkning som `hofId` i `achievements.js`) och, i PR:er, att bara
+  filen ändras, exakt en post tillkommer och att posten gäller PR-författaren. PR-kontrollerna gäller inte PR:er från
+  repots ägare. Kontrollsumman bygger på en fast fras (`HOF_SALT`, "Hello, friend." från Mr. Robot), inte på äggen, så
+  nya ägg påverkar inte befintliga poster. Topplist-PR:er mergas manuellt av Christoffer.
+- CI kör `pull_request`, inte `pull_request_target`: fork-PR:er får inga secrets. Läs PR-data via `env`, aldrig direkt i `run:`.
+- Repot ska ha *Require approval for all external contributors* (Settings → Actions → General). Med standardvalet
+  *first-time contributors* körs CI automatiskt för alla som fått en PR mergad, alltså alla på topplistan, och de kan
+  ändra workflowen i sin PR (utan secrets, men med runner-tid). Godkännandet gäller bara CI; vem som kan ändra koden
+  styrs av rulesetet på `main`.
 
 ## Innehåll och integritet (publikt repo!)
 

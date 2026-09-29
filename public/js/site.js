@@ -322,6 +322,8 @@
       input.focus();
     }
     function close() {
+      // Stänger man terminalen mitt i en nedräkning räknas det som att spela vidare
+      if (confirming) confirming(true);
       if (el) el.hidden = true;
     }
 
@@ -331,8 +333,39 @@
       if (!b && input && !el.hidden) input.focus();
     }
 
+    // Arkadlik fråga med nedräkning. Svar j/n i terminalen; tiden ute räknas som nej.
+    var confirming = null;
+    function askContinue(seconds, onYes, onNo) {
+      var line = document.createElement('div');
+      line.className = 'term-wopr';
+      append(line);
+      var left = seconds;
+      function render() { line.textContent = 'CONTINUE? ' + left + '   (j = spela vidare, n = ge upp)'; }
+      render();
+      var timer = setInterval(function () {
+        left--;
+        if (left <= 0) finish(false);
+        else render();
+      }, 1000);
+      function finish(yes) {
+        clearInterval(timer);
+        confirming = null;
+        (yes ? onYes : onNo)();
+      }
+      confirming = finish;
+    }
+
     function onKey(e) {
       if (busy) return;
+      if (confirming && e.key === 'Enter') {
+        var answer = input.value.trim().toLowerCase();
+        input.value = '';
+        print('> ' + answer, 'cmd');
+        if (/^(j|ja|y|yes)$/.test(answer)) confirming(true);
+        else if (/^(n|nej|no)$/.test(answer)) confirming(false);
+        else print('Svara j eller n. Tiden går…', 'dim');
+        return;
+      }
       if (e.key === 'Enter') {
         var cmd = input.value;
         input.value = '';
@@ -558,6 +591,7 @@
         print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
         print('  git <kmd>     status | pull | merge <light|dark> | push | blame | remote -v');
         print('  achievements  hur många påskägg har du hittat?');
+        print('  ragequit      ge upp och börja om jakten');
         print('  history, date, uname, vim, clear, exit');
       },
       whoami: function () {
@@ -713,6 +747,7 @@
           else print('  ??? ' + e.hint, 'dim');
         });
         if (n === all.length) print('Alla hittade! Kör "achievements --celebrate" för att fira igen. 🎆');
+        if (n > 0) print('Vill du börja om? Kör "ragequit".', 'dim');
       },
       history: function () {
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
@@ -729,6 +764,28 @@
     };
 
     commands.trophies = commands.achievements;
+
+    // Ge upp och börja om: Aliens, en arkadnedräkning och Groundhog Day
+    commands.ragequit = function () {
+      if (!window.Eggs) return;
+      var n = window.Eggs.found().length;
+      var total = window.Eggs.all().length;
+      if (n === 0) {
+        print('Du har inte hittat några påskägg än. Man kan inte ge upp innan man ens börjat. 😉', 'dim');
+        return;
+      }
+      print('GAME OVER, MAN! GAME OVER!', 'err');
+      print('– Hudson, Aliens (1986)', 'dim');
+      print('Du har ' + n + '/' + total + ' påskägg. Ge upp och börja om från noll?');
+      askContinue(10, function () {
+        print('Så ska det låta. Jakten fortsätter! 🥚', 'log');
+      }, function () {
+        window.Eggs.reset();
+        print('INSERT COIN', 'wopr');
+        print('☀️ 06:00. "I Got You Babe" spelar på radion. Det är Groundhog Day igen,', 'log');
+        print('och alla ' + total + ' påskägg väntar på att hittas. Från början.', 'log');
+      });
+    };
 
     function run(line) {
       if (!line) return;

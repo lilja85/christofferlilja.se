@@ -80,7 +80,8 @@ spärrat tills kontrollen är klar.
 | 20 | Not found | Gå till en sida som inte finns, till exempel `/finns-inte` |
 
 När alla 20 är klara kommer fyrverkerierna och certifikatet. För musen över *Congratulations!* för fler,
-och `achievements --celebrate` spelar upp finalen igen. `achievements --reset` börjar om från noll.
+och `achievements --celebrate` spelar upp finalen igen. `ragequit` ger upp och börjar om från noll
+(efter en arkadnedräkning där `j` ångrar), och `achievements --reset` nollställer direkt.
 
 För den otålige: `Eggs.all().forEach(e => Eggs.unlock(e.id))` i webbläsarens konsol. Men det är fusk. 😉
 

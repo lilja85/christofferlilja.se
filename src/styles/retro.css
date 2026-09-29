@@ -278,3 +278,6 @@ html[data-theme='2008'] .theme-toggle.rate-limited::after {
   position: static; min-width: 0; height: auto; padding: 0;
   background: none; color: #000000; border-radius: 0; font: 11px Tahoma, Verdana, sans-serif;
 }
+
+/* Pixelglasögonen i sudo-läge: den fyrkantiga 2008-avataren har ram och padding */
+html[data-theme='2008'] .deal-glasses { top: 45%; left: 26%; }

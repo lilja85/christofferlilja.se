@@ -48,6 +48,11 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   i `localStorage.eggs`. Ett nytt ägg läggs till där och låses upp med `window.Eggs.unlock('id')` där det utlöses.
   Antalet visas i terminalen (`achievements`), sidfoten och konsolhälsningen, så uppdatera "20" i konsoltexten om antalet ändras.
   När alla är hittade kommer fyrverkerier och ett certifikat (`Eggs.celebrate()`).
+- **Topplistan (hall of fame):** `src/data/hall-of-fame.json`, fylls på via PR:er från besökare. `scripts/validate-hall-of-fame.mjs`
+  körs i CI och kontrollerar format, kontrollsumma (`id`, samma beräkning som `hofId` i `achievements.js`) och, i PR:er, att bara
+  filen ändras, exakt en post tillkommer och att posten gäller PR-författaren. Ändras listan med ägg ändras också `id`,
+  så befintliga poster måste räknas om. Topplist-PR:er mergas manuellt av Christoffer.
+- CI kör `pull_request`, inte `pull_request_target`: fork-PR:er får inga secrets. Läs PR-data via `env`, aldrig direkt i `run:`.
 
 ## Innehåll och integritet (publikt repo!)
 

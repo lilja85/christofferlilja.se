@@ -27,6 +27,7 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - `scripts/security-headers.mjs`: **enda källan** för säkerhetsheaders (CSP, HSTS m.fl.). Ändra dem här.
 - `scripts/postbuild.mjs` (körs av `npm run build`): skriver headers till `dist/.htaccess` (webbhotellet) eller,
   när `CF_PAGES` är satt, till `dist/_headers` med noindex och tar bort `.htaccess` (Cloudflare-förhandsvisning).
+- `scripts/make-hacker-avatar.mjs`: genererar `src/assets/profil-hacker.png` (grön terminalversion av profilbilden som visas i sudo-läge). Kör om om profilbilden byts.
 - `public/.htaccess`: www-omdirigering, `charset=utf-8`, 404-sida och markören `# @security-headers`, som
   postbuild ersätter. Ta inte bort markören, då fallerar bygget med flit.
 - `.github/workflows/ci.yml`: bygge + `npm audit`, sedan deploy-jobbet (se Deploy nedan)

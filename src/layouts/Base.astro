@@ -142,7 +142,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     color-scheme: dark;
   }
   :root.sudo body { text-shadow: 0 0 6px rgb(57 255 106 / 0.35); }
-  :root.sudo img { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3); }
+  :root.sudo img:not(.avatar-hacker) { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3); }
 
   *, *::before, *::after { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }

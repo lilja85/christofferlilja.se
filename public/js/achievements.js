@@ -229,7 +229,6 @@
       '<small>Certifikat</small>' +
       '<strong>Certified Easter Egg Hunter</strong>' +
       '<span>christofferlilja.se · klarad ' + date + '</span>' +
-      '<span>Unix epoch: <code>' + completed + '</code></span>' +
       '<span class="ach-issuer">Utfärdare: Christoffer Lilja (och Claude)</span>' +
       '</div>' +
       '<details class="ach-hof"' + (openHof ? ' open' : '') + '>' +

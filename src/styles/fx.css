@@ -226,3 +226,118 @@
   .fx-conflict-mid { display: none; }
   .fx-conflict-marker { font-size: 11px; white-space: normal; max-width: calc(100% - 32px); }
 }
+
+/* ---- Påskäggsjakten (public/js/achievements.js) ------------------------------ */
+.egg-counter {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.egg-counter:hover { color: var(--fg); border-style: solid; }
+.egg-counter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ach-toast {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: calc(100% - 32px);
+  padding: 0.55rem 1.1rem 0.55rem 0.55rem;
+  background: #1b1b1f;
+  color: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  font: 14px/1.3 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  text-shadow: none;
+  animation: ach-in 0.35s ease-out;
+}
+.ach-toast.out { animation: ach-out 0.4s ease-in forwards; }
+.ach-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #9be15d, #107c10);
+  font-size: 1.2rem;
+}
+.ach-text small { display: block; color: #b8b8c0; font-size: 0.75rem; }
+.ach-text strong { display: block; font-size: 0.95rem; }
+@keyframes ach-in { from { transform: translateY(140%); opacity: 0; } }
+@keyframes ach-out { to { transform: translateY(140%); opacity: 0; } }
+
+.ach-fireworks {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ach-final {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.55);
+}
+.ach-card {
+  width: min(28rem, 100%);
+  padding: 1.5rem;
+  background: #ffffff;
+  color: #1d1d1f;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.45);
+  font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  text-align: center;
+  text-shadow: none;
+}
+.ach-card h2 { margin: 0 0 0.25rem; font-size: 2rem; text-transform: none; color: #1d1d1f; padding: 0; }
+.ach-congrats {
+  background: linear-gradient(90deg, #1f6f5c, #b48cff, #ff6b5a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  cursor: default;
+}
+.ach-cert {
+  display: grid;
+  gap: 0.2rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 3px double #c9a227;
+  border-radius: 8px;
+  background: #fffbea;
+}
+.ach-cert small { letter-spacing: 0.2em; text-transform: uppercase; color: #8a6d00; }
+.ach-cert strong { font-size: 1.2rem; }
+.ach-cert span { font-size: 0.9rem; color: #444444; }
+.ach-cert code { font-size: 0.95rem; }
+.ach-issuer { font-style: italic; }
+.ach-actions { display: flex; justify-content: center; gap: 1rem; align-items: center; margin: 0; }
+.ach-actions a { color: #1f6f5c; }
+.ach-actions button {
+  padding: 0.45rem 1rem;
+  font: inherit;
+  color: #ffffff;
+  background: #1f6f5c;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ach-toast, .ach-toast.out { animation: none; }
+}

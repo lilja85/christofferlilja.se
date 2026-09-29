@@ -54,6 +54,7 @@
 
   function enable() {
     if (added.length) return;
+    if (window.Eggs) window.Eggs.unlock('retro');
     var header = document.querySelector('.site-header');
     var main = document.querySelector('main');
     var footer = document.querySelector('.site-footer');
@@ -76,6 +77,7 @@
       guest.href = '#gastbok';
       guest.addEventListener('click', function (e) {
         e.preventDefault();
+        if (window.Eggs) window.Eggs.unlock('guestbook');
         toast('Gästboken är tyvärr stängd pga spam (sedan 2009). Skicka ett mejl istället! 📧');
       });
       nav.insertBefore(guest, nav.querySelector('.theme-toggle'));

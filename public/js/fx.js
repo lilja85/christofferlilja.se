@@ -324,7 +324,7 @@
       if (e.key === 'Enter') {
         var c = cmd.trim();
         cmd = null;
-        if (c === 'q!' || c === 'qa!' || c === 'wq!' || c === 'x!' || c === 'wqa!' || c === 'xa!') { o.remove(); onExit(); return; }
+        if (c === 'q!' || c === 'qa!' || c === 'wq!' || c === 'x!' || c === 'wqa!' || c === 'xa!') { o.remove(); if (window.Eggs) window.Eggs.unlock('vim'); onExit(); return; }
         if (c === 'q' || c === 'qa') show('E37: No write since last change (add ! to override)', true);
         else if (c === 'wq' || c === 'x' || c === 'w') show("E45: 'readonly' option is set (add ! to override)", true);
         else if (c === 'help') show('Hjälp? I vim? Det finns ingen hjälp här. Bara :q! 😇', true);

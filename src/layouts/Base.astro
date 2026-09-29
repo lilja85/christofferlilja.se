@@ -9,9 +9,11 @@ import '../styles/fx.css';
 interface Props {
   title?: string;
   description?: string;
+  /** Påskägg som låses upp när sidan visas (t.ex. 404) */
+  egg?: string;
 }
 
-const { title, description = `${SITE.name} – ${SITE.title} i ${SITE.location}.` } = Astro.props;
+const { title, egg, description = `${SITE.name} – ${SITE.title} i ${SITE.location}.` } = Astro.props;
 const pageTitle = title ? `${title} – ${SITE.name}` : `${SITE.name} – ${SITE.title}`;
 const ogImage = await getImage({ src: avatar, width: 1200, height: 1200, format: 'jpg' });
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -52,11 +54,12 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     {SITE.links.map((l) => <link rel="me" href={l.href} />)}
     <!-- Sätter temat innan sidan ritas så att den inte blinkar till i fel färg -->
     <script is:inline src="/js/theme-init.js"></script>
+    <script is:inline src="/js/achievements.js" defer></script>
     <script is:inline src="/js/fx.js" defer></script>
     <script is:inline src="/js/site.js" defer></script>
     <script is:inline src="/js/retro.js" defer></script>
   </head>
-  <body>
+  <body data-egg={egg}>
     {preview && (
       <div class="env-banner" role="note">
         <strong>Förhandsvisning</strong> på Cloudflare Pages{preview.branch && preview.branch !== 'main' && <> · branch <code>{preview.branch}</code></>}{preview.sha && <> · <a href={`${REPO}/commit/${preview.sha}`}>{preview.sha.slice(0, 7)}</a></>}. Den riktiga sidan finns på <a href="https://christofferlilja.se/">christofferlilja.se</a>.
@@ -78,7 +81,7 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
       <slot />
     </main>
     <footer class="wrap site-footer">
-      <p>© {new Date().getFullYear()} {SITE.name}</p>
+      <p>© {new Date().getFullYear()} {SITE.name} <button type="button" id="egg-counter" class="egg-counter" hidden></button></p>
     </footer>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
     <script type="application/json" id="lab-data" set:html={JSON.stringify(labData)} />

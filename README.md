@@ -81,7 +81,7 @@ spärrat tills kontrollen är klar.
 
 När alla 20 är klara kommer fyrverkerierna och certifikatet. För musen över *Congratulations!* för fler,
 och `achievements --celebrate` spelar upp finalen igen. `ragequit` ger upp och börjar om från noll
-(efter en arkadnedräkning, CONTINUE?, där `j` fortsätter jakten och `n` ger upp), och `achievements --reset` nollställer direkt.
+(efter frågan `[j/N]`, där bara `j` ger upp), och `achievements --reset` nollställer direkt.
 
 För den otålige: `Eggs.all().forEach(e => Eggs.unlock(e.id))` i webbläsarens konsol. Men det är fusk. 😉
 

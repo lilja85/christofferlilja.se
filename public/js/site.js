@@ -322,8 +322,8 @@
       input.focus();
     }
     function close() {
-      // Stänger man terminalen mitt i en nedräkning räknas det som att spela vidare
-      if (confirming) confirming(true);
+      // Stänger man terminalen mitt i en bekräftelse räknas det som nej
+      if (confirming) confirming(false);
       if (el) el.hidden = true;
     }
 
@@ -333,26 +333,15 @@
       if (!b && input && !el.hidden) input.focus();
     }
 
-    // Arkadlik fråga med nedräkning. Svar j/n i terminalen; tiden ute räknas som nej.
+    // Bekräftelse för farliga kommandon, som apt: [j/N]. Bara ett uttryckligt j utför det;
+    // n, tom rad, annat svar eller att stänga terminalen avbryter. Ingen tidspress.
     var confirming = null;
-    function askContinue(seconds, onYes, onNo) {
-      var line = document.createElement('div');
-      line.className = 'term-wopr';
-      append(line);
-      var left = seconds;
-      function render() { line.textContent = 'CONTINUE? ' + left + '   (j = fortsätt jakten, n = ge upp och börja om)'; }
-      render();
-      var timer = setInterval(function () {
-        left--;
-        if (left <= 0) finish(false);
-        else render();
-      }, 1000);
-      function finish(yes) {
-        clearInterval(timer);
+    function askConfirm(question, onYes, onNo) {
+      print(question + ' [j/N]');
+      confirming = function (yes) {
         confirming = null;
         (yes ? onYes : onNo)();
-      }
-      confirming = finish;
+      };
     }
 
     function onKey(e) {
@@ -361,9 +350,7 @@
         var answer = input.value.trim().toLowerCase();
         input.value = '';
         print('> ' + answer, 'cmd');
-        if (/^(j|ja|y|yes)$/.test(answer)) confirming(true);
-        else if (/^(n|nej|no)$/.test(answer)) confirming(false);
-        else print('Svara j eller n. Tiden går…', 'dim');
+        confirming(/^(j|ja|y|yes)$/.test(answer));
         return;
       }
       if (e.key === 'Enter') {
@@ -776,14 +763,13 @@
       }
       print('GAME OVER, MAN! GAME OVER!', 'err');
       print('– Hudson, Aliens (1986)', 'dim');
-      print('Du har ' + n + '/' + total + ' påskägg. Vill du fortsätta jakten?');
-      askContinue(10, function () {
-        print('Så ska det låta. Jakten fortsätter! 🥚', 'log');
-      }, function () {
+      askConfirm('Du har ' + n + '/' + total + ' påskägg. Ge upp och börja om från noll?', function () {
         window.Eggs.reset();
         print('INSERT COIN', 'wopr');
         print('☀️ 06:00. "I Got You Babe" spelar på radion. Det är Groundhog Day igen,', 'log');
         print('och alla ' + total + ' påskägg väntar på att hittas. Från början.', 'log');
+      }, function () {
+        print('Så ska det låta. Jakten fortsätter! 🥚', 'log');
       });
     };
 

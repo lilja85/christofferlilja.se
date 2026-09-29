@@ -336,9 +336,17 @@
       if (e.key === 'Enter') {
         var cmd = input.value;
         input.value = '';
+        print((isRoot() ? '# ' : '$ ') + cmd, 'cmd');
+        // History expansion som i bash: !! blir förra kommandot innan något körs.
+        // Historiken sparar den expanderade raden, så !! kan aldrig peka på sig självt.
+        if (/(^|\s)!!(\s|$)/.test(cmd)) {
+          var last = history[history.length - 1];
+          if (!last) { print('-bash: !!: event not found', 'err'); return; }
+          cmd = cmd.replace(/(^|\s)!!(?=\s|$)/g, function (m, pre) { return pre + last; });
+          print(cmd.trim(), 'dim');
+        }
         if (cmd.trim()) history.push(cmd.trim());
         histPos = history.length;
-        print((isRoot() ? '# ' : '$ ') + cmd, 'cmd');
         var result = run(cmd.trim());
         if (result && typeof result.then === 'function') {
           setBusy(true);
@@ -484,6 +492,8 @@
     }
 
     function sudoCmd(args) {
+      // sudo sudo … är samma sak som sudo … (kan uppstå med sudo !!)
+      if (args[0] === 'sudo') return sudoCmd(args.slice(1));
       var first = args[0];
 
       if (first === '-k') {
@@ -501,15 +511,6 @@
         print('sudo: help: kommandot hittades inte. Menade du "sudo -l"?', 'err');
         return;
       }
-      if (first === '!!') {
-        var prev = history[history.length - 2];
-        if (!prev) { print('sudo: !!: inget tidigare kommando', 'err'); return; }
-        var prevArgs = prev.split(/\s+/);
-        if (prevArgs[0] === 'sudo') prevArgs.shift();
-        print('sudo ' + prevArgs.join(' '), 'dim');
-        return sudoCmd(prevArgs);
-      }
-
       if (Fx.isLocked()) {
         print('besökare finns inte i sudoers-filen. Den här incidenten kommer att rapporteras.', 'err');
         close();

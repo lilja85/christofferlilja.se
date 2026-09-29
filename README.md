@@ -105,7 +105,7 @@ Topplistan är `src/data/hall-of-fame.json` och fylls på via pull requests, sor
    `{ "github": "octocat", "completed": 1790713134, "id": "62b47847" }`
 2. Lägg till raden **sist** i `src/data/hall-of-fame.json`, antingen via knappen *Öppna filen på GitHub*
    (GitHub forkar och skapar PR:en åt dig) eller med fork, branch och `git push` som vanligt.
-3. Öppna en PR. CI kontrollerar raden.
+3. Öppna en PR. CI kontrollerar raden. PR:er från forkar körs först efter att jag godkänt CI-körningen, så det kan ta en stund innan den blir grön.
 
 **Regler, som CI kontrollerar:** PR:en ändrar bara `hall-of-fame.json`, lägger till exakt en post, och posten gäller
 kontot som öppnar PR:en. En plats per konto. `completed` är unix-tiden (sekunder) när du blev klar, och `id` är en

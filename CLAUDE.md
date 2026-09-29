@@ -53,6 +53,10 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   filen ändras, exakt en post tillkommer och att posten gäller PR-författaren. Ändras listan med ägg ändras också `id`,
   så befintliga poster måste räknas om. Topplist-PR:er mergas manuellt av Christoffer.
 - CI kör `pull_request`, inte `pull_request_target`: fork-PR:er får inga secrets. Läs PR-data via `env`, aldrig direkt i `run:`.
+- Repot ska ha *Require approval for all external contributors* (Settings → Actions → General). Med standardvalet
+  *first-time contributors* körs CI automatiskt för alla som fått en PR mergad, alltså alla på topplistan, och de kan
+  ändra workflowen i sin PR (utan secrets, men med runner-tid). Godkännandet gäller bara CI; vem som kan ändra koden
+  styrs av rulesetet på `main`.
 
 ## Innehåll och integritet (publikt repo!)
 

@@ -340,7 +340,7 @@
       line.className = 'term-wopr';
       append(line);
       var left = seconds;
-      function render() { line.textContent = 'CONTINUE? ' + left + '   (j = spela vidare, n = ge upp)'; }
+      function render() { line.textContent = 'CONTINUE? ' + left + '   (j = fortsätt jakten, n = ge upp och börja om)'; }
       render();
       var timer = setInterval(function () {
         left--;
@@ -776,7 +776,7 @@
       }
       print('GAME OVER, MAN! GAME OVER!', 'err');
       print('– Hudson, Aliens (1986)', 'dim');
-      print('Du har ' + n + '/' + total + ' påskägg. Ge upp och börja om från noll?');
+      print('Du har ' + n + '/' + total + ' påskägg. Vill du fortsätta jakten?');
       askContinue(10, function () {
         print('Så ska det låta. Jakten fortsätter! 🥚', 'log');
       }, function () {

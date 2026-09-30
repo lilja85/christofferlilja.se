@@ -18,7 +18,7 @@ npm run preview
 | `src/pages/index.astro` | Profilsidan |
 | `src/content/lab/*.md` | Labbanteckningar (`draft: true` döljer ett inlägg) |
 | `src/site.ts` | Namn, titel, länkar |
-| `public/cv/Christoffer_Lilja-CV.pdf` | CV:t. Länken visas bara om filen finns |
+| `public/cv/*.pdf` | CV:t. Nyaste PDF:en länkas (datum i filnamnet avgör). Utan telefonnummer, allt här är publikt |
 | `public/.htaccess` | www-omdirigering, teckenkodning och 404-sida (Apache) |
 | `scripts/security-headers.mjs` | Säkerhetsheaders, som skrivs till `.htaccess` eller `_headers` vid bygget |
 

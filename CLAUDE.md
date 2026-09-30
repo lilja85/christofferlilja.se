@@ -28,6 +28,9 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - `scripts/postbuild.mjs` (körs av `npm run build`): skriver headers till `dist/.htaccess` (webbhotellet) eller,
   när `CF_PAGES` är satt, till `dist/_headers` med noindex och tar bort `.htaccess` (Cloudflare-förhandsvisning).
 - `scripts/make-hacker-avatar.mjs`: genererar `src/assets/profil-hacker.png` (grön terminalversion av profilbilden som visas i sudo-läge). Kör om om profilbilden byts.
+- `public/cv/`: CV som PDF. Startsidan länkar till den nyaste (datum `ÅÅÅÅ-MM-DD` i filnamnet, annars ändringstid).
+  Allt i `public/` publiceras, så ta bort gamla versioner. **Inga telefonnummer eller andra personuppgifter** i PDF:en:
+  kontrollera med `pdftotext fil.pdf - | grep -E '07[0-9]'` och metadatan innan commit.
 - `public/.htaccess`: www-omdirigering, `charset=utf-8`, 404-sida och markören `# @security-headers`, som
   postbuild ersätter. Ta inte bort markören, då fallerar bygget med flit.
 - `.github/workflows/ci.yml`: bygge + `npm audit`, sedan deploy-jobbet (se Deploy nedan)

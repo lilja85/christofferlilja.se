@@ -1,5 +1,6 @@
 ---
 import fs from 'node:fs';
+import path from 'node:path';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
@@ -7,9 +8,20 @@ import avatar from '../assets/profil-avatar.jpg';
 import hacker from '../assets/profil-hacker.png';
 import { SITE, formatDate } from '../site';
 
-// CV-länken visas bara när PDF:en faktiskt finns i public/cv/
-const cvPath = '/cv/Christoffer_Lilja-CV.pdf';
-const hasCv = fs.existsSync(new URL(`../../public${cvPath}`, import.meta.url));
+// CV-länken pekar på den nyaste PDF:en i public/cv/, oavsett filnamn: först datumet i namnet
+// (ÅÅÅÅ-MM-DD), annars ändringstiden. Ingen PDF, ingen länk.
+// Sökvägen utgår från projektroten (där bygget körs): import.meta.url pekar på den paketerade filen, inte src/pages.
+function latestCv() {
+  const dir = path.join(process.cwd(), 'public', 'cv');
+  if (!fs.existsSync(dir)) return null;
+  const pdfs = fs.readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.pdf'));
+  const dated = (f) => f.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? '';
+  const mtime = (f) => fs.statSync(path.join(dir, f)).mtimeMs;
+  pdfs.sort((a, b) => dated(b).localeCompare(dated(a)) || mtime(b) - mtime(a));
+  return pdfs[0] ? `/cv/${encodeURIComponent(pdfs[0])}` : null;
+}
+const cvPath = latestCv();
+const hasCv = cvPath !== null;
 
 const posts = (await getCollection('lab', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())

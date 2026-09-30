@@ -4,10 +4,17 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Conventional Commits: "build(deps): bump astro …"
+    commit-message:
+      prefix: build
+      include: scope
     groups:
       astro:
         patterns: ["astro", "@astrojs/*"]
   - package-ecosystem: github-actions
     directory: /
+    commit-message:
+      prefix: ci
+      include: scope
     schedule:
       interval: weekly

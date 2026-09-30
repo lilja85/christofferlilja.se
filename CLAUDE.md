@@ -100,7 +100,9 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   `deploy` eller `headers`. Brytande ändringar (t.ex. i `site.config.mjs` för den som forkat) märks med `!`
   (`feat(config)!: …`) och en `BREAKING CHANGE:`-rad i brödtexten. Exempel: `feat(eggs): lägg till git blame`,
   `fix(terminal): Enter stänger inte certifikatet`, `docs: guide för att forka sajten`.
-  PR-titeln skrivs på samma sätt.
+  PR:er mergas med vanliga merge-commits (ingen squash), så varje commit hamnar på `main`. CI kontrollerar alla
+  commit-meddelanden i PR:en (`scripts/check-commits.mjs`, merge-commits undantagna). PR-titeln skrivs på samma
+  sätt. Topplist-commits ska heta `feat(hof): lägg till @alias` (certifikatet och felmeddelandet i CI säger det).
 - Pusha feature-brancher bara efter att ha frågat. Öppna PR:en på GitHub (ingen `gh` CLI installerad) och
   länka den. Mergen gör Christoffer.
 - CI (`.github/workflows/ci.yml`) kör bygge och `npm audit`. Actions är fastlåsta på SHA. Behåll det vid uppdateringar.

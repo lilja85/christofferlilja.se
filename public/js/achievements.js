@@ -268,7 +268,8 @@
       '<button type="button" class="ach-copy" disabled>Kopiera raden</button>' +
       '<a href="' + HOF_EDIT_URL + '" target="_blank" rel="noopener">Öppna filen på GitHub</a>' +
       '</p>' +
-      '<p class="ach-hof-note">GitHub forkar repot och skapar PR:en åt dig. CI kontrollerar att raden stämmer och att ' +
+      '<p class="ach-hof-note">Skriv <code class="ach-hof-title">feat(hof): lägg till @octocat</code> i rutan ' +
+      '<em>Commit changes</em> (CI kontrollerar meddelandet). GitHub forkar repot och skapar PR:en åt dig. CI kontrollerar att raden stämmer och att ' +
       'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
       '</details>' : '') +
       '<p class="ach-actions">' +
@@ -279,6 +280,7 @@
 
     var input = o.querySelector('.ach-hof input');
     var line = o.querySelector('.ach-hof-line');
+    var title = o.querySelector('.ach-hof-title');
     var copy = o.querySelector('.ach-copy');
     var mail = o.querySelector('.ach-mail');
     // Mejlet får med den färdiga raden när ett giltigt alias är ifyllt, annars en tom rad för aliaset
@@ -296,6 +298,7 @@
         if (input.value.trim().replace(/^@/, '') !== handle) return; // hann skriva vidare
         var hofLine = '{ "github": "' + handle + '", "completed": ' + completed + ', "id": "' + id + '" }';
         line.textContent = '  ' + hofLine;
+        title.textContent = 'feat(hof): lägg till @' + handle;
         setMail(hofLine);
         copy.disabled = false;
       });

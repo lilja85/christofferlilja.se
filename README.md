@@ -59,7 +59,10 @@ npm run preview
    Commit-meddelanden och PR-titlar följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/),
    t.ex. `feat(eggs): lägg till git blame` eller `fix(retro): headern täcker menyn`.
 2. Öppna en PR. CI bygger och Cloudflare lägger en förhandsvisning i PR:en.
-3. Granska förhandsvisningen och merga. Mergen deployar till produktion.
+3. Granska förhandsvisningen och merga (vanlig merge-commit). Mergen deployar till produktion.
+
+Varje commit i PR:en hamnar på `main`, så CI (`scripts/check-commits.mjs`) kontrollerar att alla commit-meddelanden
+i PR:en följer Conventional Commits. Merge-commits hoppas över. Dependabot är inställd på `build(deps)`/`ci(deps)`.
 
 ## Publicering
 
@@ -137,7 +140,10 @@ Topplistan är `src/data/hall-of-fame.json` och fylls på via pull requests, sor
    `{ "github": "octocat", "completed": 1790713134, "id": "62b47847" }`
 2. Lägg till raden **sist** i `src/data/hall-of-fame.json`, antingen via knappen *Öppna filen på GitHub*
    (GitHub forkar och skapar PR:en åt dig) eller med fork, branch och `git push` som vanligt.
-3. Öppna en PR. CI kontrollerar raden. PR:er från forkar körs först efter att jag godkänt CI-körningen, så det kan ta en stund innan den blir grön.
+3. Skriv `feat(hof): lägg till @ditt-alias` som commit-meddelande (rutan *Commit changes* på GitHub).
+   CI kontrollerar det (se [Arbetsflöde](#arbetsflöde)). Blev det fel: stäng PR:en och gör om, eller
+   `git commit --amend` och `git push --force`.
+4. Öppna en PR. CI kontrollerar raden. PR:er från forkar körs först efter att jag godkänt CI-körningen, så det kan ta en stund innan den blir grön.
 
 **Regler, som CI kontrollerar:** PR:en ändrar bara `hall-of-fame.json`, lägger till exakt en post, och posten gäller
 kontot som öppnar PR:en. En plats per konto. `completed` är unix-tiden (sekunder) när du blev klar, och `id` är en

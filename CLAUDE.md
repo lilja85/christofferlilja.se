@@ -92,6 +92,15 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   Merge till `main` deployar till produktion. Direktpush och force-push till `main` blockeras av en
   ruleset på GitHub och av `permissions.deny` i `.claude/settings.json`. Försök inte gå runt dem.
 - Branchnamn: `feature/…` för nytt, `fix/…` för buggar, `chore/…` för underhåll och dokumentation.
+- **Commit-meddelanden följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/):**
+  `typ(omfång): beskrivning`, där beskrivningen är på svenska, börjar med liten bokstav och saknar punkt.
+  Typer: `feat` (ny funktion eller nytt innehåll), `fix` (bugg), `docs`, `style` (CSS/utseende utan ändrad funktion),
+  `refactor`, `perf`, `test`, `build` (beroenden, byggskript), `ci` (workflows) och `chore` (övrigt underhåll).
+  Omfånget är valfritt och beskriver området, t.ex. `eggs`, `terminal`, `retro`, `hof`, `lab`, `cv`, `config`,
+  `deploy` eller `headers`. Brytande ändringar (t.ex. i `site.config.mjs` för den som forkat) märks med `!`
+  (`feat(config)!: …`) och en `BREAKING CHANGE:`-rad i brödtexten. Exempel: `feat(eggs): lägg till git blame`,
+  `fix(terminal): Enter stänger inte certifikatet`, `docs: guide för att forka sajten`.
+  PR-titeln skrivs på samma sätt.
 - Pusha feature-brancher bara efter att ha frågat. Öppna PR:en på GitHub (ingen `gh` CLI installerad) och
   länka den. Mergen gör Christoffer.
 - CI (`.github/workflows/ci.yml`) kör bygge och `npm audit`. Actions är fastlåsta på SHA. Behåll det vid uppdateringar.

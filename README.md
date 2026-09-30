@@ -55,7 +55,9 @@ npm run preview
 
 `main` är skyddad. Ändringar görs på en branch och går in via pull request:
 
-1. `git switch -c feature/min-andring`, commit, `git push -u origin feature/min-andring`
+1. `git switch -c feature/min-andring`, commit, `git push -u origin feature/min-andring`.
+   Commit-meddelanden och PR-titlar följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/),
+   t.ex. `feat(eggs): lägg till git blame` eller `fix(retro): headern täcker menyn`.
 2. Öppna en PR. CI bygger och Cloudflare lägger en förhandsvisning i PR:en.
 3. Granska förhandsvisningen och merga. Mergen deployar till produktion.
 

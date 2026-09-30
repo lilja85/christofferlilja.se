@@ -73,7 +73,8 @@ deploy:
     cancel-in-progress: false
 ```
 
-- Bygget kör `npm ci`, `npm audit` och `astro build` och laddar upp `dist/` som artefakt.
+- Bygget kör `npm ci`, `npm audit` och `astro build` och laddar upp `dist/` som artefakt. Det validerar
+  också [topplistan](/lab/topplista-via-pull-requests/) och, i pull requests, commit-meddelandena.
 - Deploy-jobbet körs bara från `main`, i GitHub-miljön `production`. Miljön får bara användas från
   `main`, och där ligger uppgifterna som secrets.
 - `lftp` speglar `dist/` till servern med `ftp:ssl-force`, `ftp:ssl-protect-data` och
@@ -139,6 +140,14 @@ godkänt CI-bygge och blockerar force-push och radering. Och eftersom jag jobbar
 force-push, så att agenten inte ens försöker. Instruktionen i `CLAUDE.md` är den tredje nivån, men den är en
 uppmaning, inte en spärr. Det är samma resonemang som i jobbet: lita inte på att alla läser dokumentationen.
 
+Senare började jag använda [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/), alltså
+commit-meddelanden som `feat(eggs): lägg till git blame` eller `fix(terminal): Esc stänger terminalen`.
+Claude föreslog squash-merge, där hela PR:en blir en commit med PR-titeln som meddelande, men jag ville
+behålla vanliga merge-commits. Då hamnar varje commit på `main`, så CI kontrollerar varje commit-meddelande i
+PR:en. Merge-commits undantas, och Dependabot fick prefixen `build(deps)` och `ci(deps)` för att inte fastna i
+kontrollen. De gamla commitarna fick vara som de var. Att skriva om historiken på `main` hade krävt en
+force-push förbi mitt eget skydd, och så viktigt var det inte.
+
 > ✍️ **Fyll i:** Hur du ställde in rulesetet, till exempel med eller utan krav på godkännande, och om du själv får gå förbi det.
 
 ## Säkerhetsvinkeln
@@ -151,6 +160,9 @@ uppmaning, inte en spärr. Det är samma resonemang som i jobbet: lita inte på 
   också kräva manuellt godkännande före varje deploy.
 - **Synk med radering städar bort gammal skuld.** Den gamla PHP-sidans rester (testfiler, gamla
   inkluderingsfiler, statistikkatalog) försvann vid första deployen.
+- **Främlingar i CI.** Eftersom topplistan fylls på med pull requests från forkar kräver repot godkännande
+  innan CI körs för externa bidrag, och CI använder `pull_request`, inte `pull_request_target`, så att de
+  aldrig kommer åt secrets. Mer om det i [topplisteanteckningen](/lab/topplista-via-pull-requests/).
 - **Verifiera efteråt.** Claude kontrollerade med `curl -I` att alla headers kommer med, även på
   statiska filer, och att gamla sökvägar ger 404. Den körde också påskäggen i en headless Edge mot den
   riktiga sajten för att se att CSP:n inte stoppade något. Min oro för att nginx framför Apache skulle

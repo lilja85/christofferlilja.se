@@ -39,8 +39,8 @@ Var den skulle ligga ändrades längs vägen (se Ut på nätet).
 
 - **[Astro](https://astro.build)** bygger statisk HTML från mallar och Markdown. Ingen server,
   ingen databas, inget att hacka. Labbanteckningarna är vanliga `.md`-filer.
-- **GitHub** lagrar koden och **GitHub Actions** bygger och deployar till mitt vanliga webbhotell vid varje push.
-- **GitHub Actions** kör bygge och `npm audit`. Actions är fastlåsta på commit-SHA och
+- **GitHub** lagrar koden. **GitHub Actions** bygger, kör `npm audit` och deployar till mitt vanliga
+  webbhotell när en pull request mergas till `main`. Actions är fastlåsta på commit-SHA och
   `permissions` är så snäva som möjligt. Dependabot håller beroendena uppdaterade.
 - **Säkerhetsheaders** via `.htaccess`: CSP utan inline-skript, HSTS och så vidare. Det är därför
   all JavaScript ligger i egna filer.
@@ -59,7 +59,11 @@ Eftersom jag är utvecklare, och lite nördig, ville jag ha påskägg. Jag avsl�
 - Öppna sidan i två flikar och byt tema i båda.
 - Det finns ett tema från 2008, med besöksräknare och allt.
 - Det finns 20 påskägg totalt. Kör `achievements` i terminalen för att se hur många du hittat. Den som hittar
-  alla blir firad med fyrverkerier, som när Outlook firar ett "Congratulations", och får ett certifikat med verifierings-id.
+  alla blir firad med fyrverkerier, som när Outlook firar ett "Congratulations", och får ett certifikat.
+- Med certifikatet kan du ta plats på en topplista, via en pull request till repot. Hur det hänger ihop, och
+  varför det krävde lite säkerhetstänk, har jag skrivit om i
+  [En topplista via pull requests i ett publikt repo](/lab/topplista-via-pull-requests/).
+- Och den som tröttnar kan köra `ragequit` och börja om från noll.
 
 > ✍️ **Fyll i:** Ditt favoritpåskägg och varför.
 
@@ -76,6 +80,18 @@ HSTS går inte att styra. Det slutade med att **GitHub Actions bygger sidan och 
 mitt vanliga webbhotell** med FTPS. Headers sätts i en `.htaccess`, och ingen DNS behöver ändras.
 Det blev dessutom en bra labb i säker deploy, som jag skrivit om i
 [Deploy med GitHub Actions och FTPS till ett vanligt webbhotell](/lab/deploy-med-github-actions-och-ftps/).
+
+### Går att forka
+
+När sidan väl fanns ville jag att den skulle gå att återanvända. Allt personligt ligger nu i en enda fil,
+`site.config.mjs`: namn, texter, länkar, domän, repo och påskäggens texter, som operativsystemet
+`ChristofferOS` och BIOS-tillverkaren `Lilja Megatrends Inc.`. Astro-sidorna läser filen direkt. Påskäggen i
+webbläsaren får en publik del av den inbäddad som JSON i sidan, eftersom CSP:n inte tillåter inline-skript.
+Påskäggen, 2008-temat, topplistan och labbet går att slå av var för sig, och antalet ägg räknas om efter det.
+
+För att se att inget personligt läckte byggde Claude sidan åt en påhittad person, Ada Lovelace på
+`ada.example`, och sökte igenom hela bygget efter mitt namn, min domän och min e-post. Inga träffar. Hur man
+gör den till sin egen står i README:n i repot.
 
 ## Det som strulade
 
@@ -127,7 +143,8 @@ Några saker till som jag tar med mig:
 - **Metadata i bilder.** Mitt gamla CV från 2012, som skulle med i arkivet, innehöll hemadress,
   födelsedatum och mitt nuvarande mobilnummer. Och originalet till profilbilden innehöll
   fotografens namn, kontaktuppgifter och arbetsgivare i EXIF-datan. Den bilden låg i
-  repot en stund innan vi upptäckte det. Den byggda sidan var ren, eftersom bildbehandlingen tar bort
+  repot en stund innan vi upptäckte det. Samma sak med CV:t på sidan: det är en webbversion utan
+  telefonnummer, eftersom allt i `public/` publiceras och ligger kvar i git-historiken. Den byggda sidan var ren, eftersom bildbehandlingen tar bort
   metadata, men källfilen gjorde det inte. Claude sökte igenom hela git-historiken, både diffar
   och metadata i alla bilder som någonsin legat i repot. Sedan skrevs historiken om med
   `git filter-branch`, efter en säkerhetskopia som `git bundle`, och till sist fick repot skapas på nytt
@@ -163,9 +180,10 @@ inte om tecknet. Nu fungerar både `.` och `§`.
 
 ## Nästa steg
 
-<!-- Status 2026-09-28: sidan är live på christofferlilja.se och deployas av GitHub Actions med FTPS.
-     Båda labbanteckningarna är utkast, så Lab-länken i menyn är dold tills en publiceras. -->
+<!-- Status 2026-09-30: sidan är live på christofferlilja.se och deployas av GitHub Actions med FTPS.
+     Alla labbanteckningar är utkast, så Lab-länken i menyn är dold tills en publiceras. -->
 
 - **Peka om liljaonline.se** hit i stället för till about.me.
-- **Fylla i ✍️-rutorna** i den här och i [deploy-anteckningen](/lab/deploy-med-github-actions-och-ftps/), och publicera.
+- **Fylla i ✍️-rutorna** i den här, i [deploy-anteckningen](/lab/deploy-med-github-actions-och-ftps/) och i
+  [topplisteanteckningen](/lab/topplista-via-pull-requests/), och publicera.
 - **Skriva vidare om [homelabbet](/lab/):** Proxmox i källaren, som hittills bara kör Pi-hole.

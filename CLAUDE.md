@@ -27,7 +27,13 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - `scripts/security-headers.mjs`: **enda källan** för säkerhetsheaders (CSP, HSTS m.fl.). Ändra dem här.
 - `scripts/postbuild.mjs` (körs av `npm run build`): skriver headers till `dist/.htaccess` (webbhotellet) eller,
   när `CF_PAGES` är satt, till `dist/_headers` med noindex och tar bort `.htaccess` (Cloudflare-förhandsvisning).
-- `scripts/make-hacker-avatar.mjs`: genererar `src/assets/profil-hacker.png` (grön terminalversion av profilbilden som visas i sudo-läge). Kör om om profilbilden byts.
+- `site.config.mjs`: **allt personligt** (namn, texter, länkar, domän, repo, lanseringsdatum, påskäggstexter) och
+  strömbrytarna `features.eggs/retro/hallOfFame/lab`. `src/site.ts` fyller i standardvärden och exporterar `CONFIG`,
+  `SITE` och `publicConfig()`, som `Base.astro` bäddar in som `<script type="application/json" id="site-config">`
+  så att `public/js/*.js` kan läsa den. Typerna finns i `src/config-types.ts`.
+- `scripts/make-hacker-avatar.mjs`: genererar `src/assets/avatar-hacker.png` (grön terminalversion av `avatar.jpg`, visas i sudo-läge). Kör om om profilbilden byts.
+- `scripts/make-icons.mjs`: favicon med initialerna ur konfigurationen, för den som forkar. Christoffers handritade
+  CL-ikon ska inte skrivas över, så kör den inte här.
 - `public/cv/`: CV som PDF. Startsidan länkar till den nyaste (datum `ÅÅÅÅ-MM-DD` i filnamnet, annars ändringstid).
   Allt i `public/` publiceras, så ta bort gamla versioner. **Inga telefonnummer eller andra personuppgifter** i PDF:en:
   kontrollera med `pdftotext fil.pdf - | grep -E '07[0-9]'` och metadatan innan commit.
@@ -45,11 +51,16 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 - **Tema-tillstånd:** `data-theme` på `<html>` (`light`/`dark`/`2008`/`gray`), `localStorage.theme` +
   `theme-meta` (synk mellan flikar), `sessionStorage.sudo-locked`, `html.sudo`, `html[data-fx]` = effekt pågår.
   Byt tema via `setTheme()` så att `themechange` skickas.
+- **Inget personligt hårdkodat.** Namn, domän, e-post, länkar och liknande läses från `site.config.mjs` (i Astro via
+  `CONFIG`, i `public/js/` via `site-config`-JSON:en). Repot ska gå att forka för en annan person; se
+  "Gör den till din egen" i README. Nya funktioner som hör till påskäggen, 2008-temat, topplistan eller labbet ska
+  respektera respektive `features`-flagga.
 - Text på sidan är på svenska. Kommentarer i koden också.
 - Påskäggen är en del av sajten, inte skräp. Bevara dem, och tänk på `prefers-reduced-motion`.
 - **Påskäggsjakten:** alla ägg är listade i `public/js/achievements.js` (id, titel, beskrivning, ledtråd) och sparas
   i `localStorage.eggs`. Ett nytt ägg läggs till där och låses upp med `window.Eggs.unlock('id')` där det utlöses.
-  Antalet visas i terminalen (`achievements`), sidfoten och konsolhälsningen, så uppdatera "20" i konsoltexten om antalet ändras.
+  Antalet räknas dynamiskt (ägg med `feature: 'retro'` försvinner när funktionen är av) och visas i terminalen
+  (`achievements`), sidfoten och konsolhälsningen.
   När alla är hittade kommer fyrverkerier och ett certifikat (`Eggs.celebrate()`).
 - **Topplistan (hall of fame):** `src/data/hall-of-fame.json`, fylls på via PR:er från besökare. `scripts/validate-hall-of-fame.mjs`
   körs i CI och kontrollerar format, kontrollsumma (`id`, samma beräkning som `hofId` i `achievements.js`) och, i PR:er, att bara
@@ -81,6 +92,17 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   Merge till `main` deployar till produktion. Direktpush och force-push till `main` blockeras av en
   ruleset på GitHub och av `permissions.deny` i `.claude/settings.json`. Försök inte gå runt dem.
 - Branchnamn: `feature/…` för nytt, `fix/…` för buggar, `chore/…` för underhåll och dokumentation.
+- **Commit-meddelanden följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/):**
+  `typ(omfång): beskrivning`, där beskrivningen är på svenska, börjar med liten bokstav och saknar punkt.
+  Typer: `feat` (ny funktion eller nytt innehåll), `fix` (bugg), `docs`, `style` (CSS/utseende utan ändrad funktion),
+  `refactor`, `perf`, `test`, `build` (beroenden, byggskript), `ci` (workflows) och `chore` (övrigt underhåll).
+  Omfånget är valfritt och beskriver området, t.ex. `eggs`, `terminal`, `retro`, `hof`, `lab`, `cv`, `config`,
+  `deploy` eller `headers`. Brytande ändringar (t.ex. i `site.config.mjs` för den som forkat) märks med `!`
+  (`feat(config)!: …`) och en `BREAKING CHANGE:`-rad i brödtexten. Exempel: `feat(eggs): lägg till git blame`,
+  `fix(terminal): Enter stänger inte certifikatet`, `docs: guide för att forka sajten`.
+  PR:er mergas med vanliga merge-commits (ingen squash), så varje commit hamnar på `main`. CI kontrollerar alla
+  commit-meddelanden i PR:en (`scripts/check-commits.mjs`, merge-commits undantagna). PR-titeln skrivs på samma
+  sätt. Topplist-commits ska heta `feat(hof): lägg till @alias` (certifikatet och felmeddelandet i CI säger det).
 - Pusha feature-brancher bara efter att ha frågat. Öppna PR:en på GitHub (ingen `gh` CLI installerad) och
   länka den. Mergen gör Christoffer.
 - CI (`.github/workflows/ci.yml`) kör bygge och `npm audit`. Actions är fastlåsta på SHA. Behåll det vid uppdateringar.

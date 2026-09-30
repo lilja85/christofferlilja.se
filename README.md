@@ -2,6 +2,34 @@
 
 Profilsida och labbanteckningar. Byggd med [Astro](https://astro.build) som statisk sida och publicerad till webbhotellet med GitHub Actions.
 
+## Gör den till din egen
+
+Sajten går att forka och använda för någon annan. Allt personligt ligger i `site.config.mjs` och några utbytbara filer.
+
+1. **Forka repot** och klona det. `npm install`.
+2. **Redigera `site.config.mjs`:** adress, repo, namn, titel, texter, länkar och e-post. Kommentarerna i filen
+   förklarar varje fält. Under `features` slår du av det du inte vill ha:
+   - `eggs`: terminalen, sudo, kraschen, rate limit, achievements med mera. Av = en vanlig profilsida med temaknapp.
+   - `retro`: 2008-temat (kräver `eggs`).
+   - `hallOfFame`: topplistan via pull requests (kräver `eggs`).
+   - `lab`: labbanteckningarna och Lab-länken.
+3. **Byt bilder:**
+   - Lägg din profilbild i `src/assets/avatar.jpg` (kvadratisk, minst 320 px, utan EXIF-metadata) och kör
+     `node scripts/make-hacker-avatar.mjs` för sudo-versionen.
+   - Justera `avatar.glasses` (och `glassesRetro`) så att "deal with it"-glasögonen i sudo-läget hamnar på ögonen.
+   - `node scripts/make-icons.mjs` gör favicon med dina initialer. Har du en egen ikon, lägg den i `public/` i stället.
+   - 2008-temat: gör en egen header (640 × 134 px) i `public/retro/header.png`, eller sätt `retro.headerImage: null`
+     för en grön header med namnet i text.
+4. **Töm det som är mitt:** ta bort filerna i `src/content/lab/` och `public/cv/`, sätt `src/data/hall-of-fame.json`
+   till `[]`, och skriv om `.claude/skills/labbanteckning/` och `CLAUDE.md` om du använder Claude Code.
+   (Astro varnar för en tom lab-samling tills du skrivit första anteckningen, det är ofarligt.)
+5. **Publicering:** sätt variabeln och secrets under [Publicering](#publicering). Förhandsvisningar: koppla repot
+   i Cloudflare Pages (bygg `npm run build`, katalog `dist`) och sätt `site.previewUrl`, eller `null` utan.
+6. **Skydda repot:** ett ruleset på `main` som kräver PR och statuskontrollen `build`, och
+   *Require approval for all external contributors* under Settings → Actions → General.
+
+Kör `npm run build` och sök efter rester: `grep -ril "christoffer\|lilja" dist` ska inte ge några träffar.
+
 ## Kom igång
 
 ```sh
@@ -17,7 +45,8 @@ npm run preview
 |---|---|
 | `src/pages/index.astro` | Profilsidan |
 | `src/content/lab/*.md` | Labbanteckningar (`draft: true` döljer ett inlägg) |
-| `src/site.ts` | Namn, titel, länkar |
+| `site.config.mjs` | Allt personligt: namn, texter, länkar, domän, repo och vilka funktioner som är på |
+| `src/assets/avatar.jpg` | Profilbilden (`avatar-hacker.png` är sudo-versionen, genererad) |
 | `public/cv/*.pdf` | CV:t. Nyaste PDF:en länkas (datum i filnamnet avgör). Utan telefonnummer, allt här är publikt |
 | `public/.htaccess` | www-omdirigering, teckenkodning och 404-sida (Apache) |
 | `scripts/security-headers.mjs` | Säkerhetsheaders, som skrivs till `.htaccess` eller `_headers` vid bygget |
@@ -26,9 +55,14 @@ npm run preview
 
 `main` är skyddad. Ändringar görs på en branch och går in via pull request:
 
-1. `git switch -c feature/min-andring`, commit, `git push -u origin feature/min-andring`
+1. `git switch -c feature/min-andring`, commit, `git push -u origin feature/min-andring`.
+   Commit-meddelanden och PR-titlar följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/),
+   t.ex. `feat(eggs): lägg till git blame` eller `fix(retro): headern täcker menyn`.
 2. Öppna en PR. CI bygger och Cloudflare lägger en förhandsvisning i PR:en.
-3. Granska förhandsvisningen och merga. Mergen deployar till produktion.
+3. Granska förhandsvisningen och merga (vanlig merge-commit). Mergen deployar till produktion.
+
+Varje commit i PR:en hamnar på `main`, så CI (`scripts/check-commits.mjs`) kontrollerar att alla commit-meddelanden
+i PR:en följer Conventional Commits. Merge-commits hoppas över. Dependabot är inställd på `build(deps)`/`ci(deps)`.
 
 ## Publicering
 
@@ -106,7 +140,10 @@ Topplistan är `src/data/hall-of-fame.json` och fylls på via pull requests, sor
    `{ "github": "octocat", "completed": 1790713134, "id": "62b47847" }`
 2. Lägg till raden **sist** i `src/data/hall-of-fame.json`, antingen via knappen *Öppna filen på GitHub*
    (GitHub forkar och skapar PR:en åt dig) eller med fork, branch och `git push` som vanligt.
-3. Öppna en PR. CI kontrollerar raden. PR:er från forkar körs först efter att jag godkänt CI-körningen, så det kan ta en stund innan den blir grön.
+3. Skriv `feat(hof): lägg till @ditt-alias` som commit-meddelande (rutan *Commit changes* på GitHub).
+   CI kontrollerar det (se [Arbetsflöde](#arbetsflöde)). Blev det fel: stäng PR:en och gör om, eller
+   `git commit --amend` och `git push --force`.
+4. Öppna en PR. CI kontrollerar raden. PR:er från forkar körs först efter att jag godkänt CI-körningen, så det kan ta en stund innan den blir grön.
 
 **Regler, som CI kontrollerar:** PR:en ändrar bara `hall-of-fame.json`, lägger till exakt en post, och posten gäller
 kontot som öppnar PR:en. En plats per konto. `completed` är unix-tiden (sekunder) när du blev klar, och `id` är en

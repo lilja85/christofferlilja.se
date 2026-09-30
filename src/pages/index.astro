@@ -4,9 +4,9 @@ import path from 'node:path';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import avatar from '../assets/profil-avatar.jpg';
-import hacker from '../assets/profil-hacker.png';
-import { SITE, formatDate } from '../site';
+import avatar from '../assets/avatar.jpg';
+import hacker from '../assets/avatar-hacker.png';
+import { SITE, CONFIG, formatDate } from '../site';
 
 // CV-länken pekar på den nyaste PDF:en i public/cv/, oavsett filnamn: först datumet i namnet
 // (ÅÅÅÅ-MM-DD), annars ändringstiden. Ingen PDF, ingen länk.
@@ -27,22 +27,26 @@ const posts = (await getCollection('lab', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
 
-const focus = [
-  { title: 'Säker leveranskedja', text: 'Azure DevOps och GitHub: behörighetsmodeller, branch policies och GitHub Advanced Security. Hotmodellering och workshops så att teamen förstår varför, inte bara hur.' },
-  { title: 'Infrastruktur som kod', text: 'Terraform och Bicep i pipelines som granskar och rullar ut ändringar automatiskt. Teamen behåller farten utan att vänta på någon med rätt behörighet.' },
-  { title: 'Azure & identitet', text: 'Entra ID med PIM, Key Vault, API Management, AKS, Functions och Defender for Cloud. Lösningar som utvärderas mot Well-Architected Framework.' },
-  { title: 'IAM/IGA', text: 'Behörighetshantering i OpenText IAM/IGA: least privilege, segregation of duties och governance med återkommande granskning av vem som har åtkomst.' },
-];
-
-const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
+const { person, profile, avatar: avatarConfig, features } = CONFIG;
+const showLabSection = features.lab && posts.length > 0;
+// Glasögonens placering (i sudo-läge) beror på ansiktet i bilden, så den kommer från konfigurationen
+const glassesStyle = [
+  `--glasses-top: ${avatarConfig.glasses.top}%`,
+  `--glasses-left: ${avatarConfig.glasses.left}%`,
+  `--glasses-retro-top: ${avatarConfig.glassesRetro.top}%`,
+  `--glasses-retro-left: ${avatarConfig.glassesRetro.left}%`,
+].join('; ');
+const lead = [person.title, person.company && `på ${person.company}`, person.location && `i ${person.location}`]
+  .filter(Boolean)
+  .join(' ');
 ---
 <Base>
   <section class="hero">
-    <span class="avatar-wrap">
-      <Image src={avatar} alt="Christoffer Lilja" width={320} height={320} fit="cover" class="avatar" loading="eager" />
+    <span class="avatar-wrap" style={glassesStyle}>
+      <Image src={avatar} alt={person.name} width={320} height={320} fit="cover" class="avatar" loading="eager" />
       <!-- sudo-läget: hackerversionen (scripts/make-hacker-avatar.mjs) och "deal with it"-glasögon -->
-      <Image src={hacker} alt="" aria-hidden="true" width={384} height={384} format="png" class="avatar avatar-hacker" loading="eager" />
-      <svg class="deal-glasses" viewBox="0 0 26 7" aria-hidden="true" shape-rendering="crispEdges">
+      {features.eggs && <Image src={hacker} alt="" aria-hidden="true" width={384} height={384} format="png" class="avatar avatar-hacker" loading="eager" />}
+      {features.eggs && <svg class="deal-glasses" viewBox="0 0 26 7" aria-hidden="true" shape-rendering="crispEdges">
         <rect x="0" y="0" width="26" height="1" fill="#000" />
         <rect x="2" y="1" width="9" height="1" fill="#000" /><rect x="15" y="1" width="9" height="1" fill="#000" />
         <rect x="11" y="1" width="4" height="1" fill="#000" />
@@ -50,11 +54,11 @@ const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
         <rect x="4" y="3" width="5" height="1" fill="#000" /><rect x="17" y="3" width="5" height="1" fill="#000" />
         <rect x="3" y="1" width="1" height="1" fill="#fff" /><rect x="4" y="2" width="1" height="1" fill="#fff" />
         <rect x="16" y="1" width="1" height="1" fill="#fff" /><rect x="17" y="2" width="1" height="1" fill="#fff" />
-      </svg>
+      </svg>}
     </span>
     <div>
-      <h1>Christoffer Lilja</h1>
-      <p class="lead">{SITE.title} på Consid i {SITE.location}.</p>
+      <h1>{person.name}</h1>
+      <p class="lead">{lead}.</p>
       <p class="links">
         {SITE.links.map((l) => <a href={l.href} rel="me">{l.label}</a>)}
         <a href={`mailto:${SITE.email}`}>E-post</a>
@@ -64,29 +68,23 @@ const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
   </section>
 
   <section>
-    <p>
-      Jag har jobbat som .NET-utvecklare sedan 2007. De senaste åren har jag
-      mest arbetat med utvecklings- och leveranskedjan, med fokus på säkerhet. Just nu arbetar
-      jag mest med behörighetshantering (IAM/IGA), och mycket i OpenTexts produkter, men också
-      med kringsystem och integrationer.
-    </p>
-    <p>
-      Utvecklarbakgrunden gör att jag förstår varför team ibland går runt säkerheten. Därför
-      bygger jag hellre lösningar som teamen faktiskt vill använda än regler de måste följa.
-    </p>
+    {profile.intro.map((text) => <p>{text}</p>)}
   </section>
 
   <section>
-    <h2>Det här jobbar jag med</h2>
+    <h2>{profile.focusHeading}</h2>
     <ul class="focus">
-      {focus.map((f) => <li><strong>{f.title}</strong><span>{f.text}</span></li>)}
+      {profile.focus.map((f) => <li><strong>{f.title}</strong><span>{f.text}</span></li>)}
     </ul>
-    <p class="muted">
-      Uppdrag i urval: {clients.join(' · ')}. Fullständig historik finns på <a href={SITE.links[0].href}>LinkedIn</a>.
-    </p>
+    {profile.clients.length > 0 && (
+      <p class="muted">
+        Uppdrag i urval: {profile.clients.join(' · ')}.
+        {SITE.links[0] && <> Fullständig historik finns på <a href={SITE.links[0].href}>{SITE.links[0].label}</a>.</>}
+      </p>
+    )}
   </section>
 
-  {posts.length > 0 && (
+  {showLabSection && (
     <section>
       <h2>Senast i labbet</h2>
       <ul class="posts">
@@ -115,8 +113,8 @@ const clients = ['If', 'Norion Bank', 'Nexthink', 'GSK', 'Sandvik Coromant'];
   :global(:root.sudo) .avatar-wrap .avatar-hacker { display: block; }
   .deal-glasses {
     position: absolute;
-    left: 30%;
-    top: 47%;
+    left: var(--glasses-left, 30%);
+    top: var(--glasses-top, 47%);
     width: 42%;
     filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.5));
   }

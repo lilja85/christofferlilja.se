@@ -37,6 +37,13 @@ jobs:
           REPO_OWNER: ${{ github.repository_owner }}
         run: node scripts/validate-hall-of-fame.mjs
       - run: npm run build
+      - name: Kontrollera commit-meddelanden (Conventional Commits)
+        # Körs även om ett tidigare steg fallerat, så att alla fel syns på en gång
+        if: github.event_name == 'pull_request' && !cancelled()
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: node scripts/check-commits.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dist

@@ -9,7 +9,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const FILE = 'src/data/hall-of-fame.json';
-const LAUNCH = 1790553600; // 2026-09-28T00:00:00Z, innan dess fanns ingen jakt
+// Lanseringsdagen (site.launched i site.config.mjs), innan dess fanns ingen jakt
+const LAUNCH = Date.parse(`${siteConfig.site.launched}T00:00:00Z`) / 1000;
 const GITHUB_HANDLE = /^(?!-)(?!.*--)[A-Za-z0-9-]{1,39}(?<!-)$/;
 const KEYS = ['completed', 'github', 'id'];
 
@@ -17,6 +18,7 @@ const errors = [];
 const fail = (msg) => errors.push(msg);
 
 import { hofId } from './hof-id.mjs';
+import siteConfig from '../site.config.mjs';
 
 function parse(text, label) {
   let data;

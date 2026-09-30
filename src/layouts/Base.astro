@@ -1,8 +1,8 @@
 ---
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import avatar from '../assets/profil-avatar.jpg';
-import { SITE } from '../site';
+import avatar from '../assets/avatar.jpg';
+import { SITE, CONFIG, publicConfig } from '../site';
 import hallOfFame from '../data/hall-of-fame.json';
 import '../styles/retro.css';
 import '../styles/fx.css';
@@ -20,7 +20,7 @@ const ogImage = await getImage({ src: avatar, width: 1200, height: 1200, format:
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 // Cloudflare Pages sätter CF_PAGES m.fl. vid bygget. Där är sidan en förhandsvisning, inte produktionen.
-const REPO = 'https://github.com/lilja85/christofferlilja.se';
+const REPO = CONFIG.site.repoUrl;
 const preview = process.env.CF_PAGES
   ? { branch: process.env.CF_PAGES_BRANCH ?? '', sha: process.env.CF_PAGES_COMMIT_SHA ?? '' }
   : null;
@@ -29,15 +29,18 @@ const preview = process.env.CF_PAGES
 const labData = (await getCollection('lab', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .map((p) => ({ title: p.data.title, date: p.data.date.toISOString().slice(0, 10), url: `/lab/${p.id}/` }));
+
+const { features } = CONFIG;
+const showLab = features.lab && labData.length > 0;
+// 2008-temats header: en egen bild, eller null för en generisk header med namnet i text (src/styles/retro.css)
+const retroHeader = CONFIG.retro.headerImage;
+const htmlStyle = retroHeader ? `--retro-header: url('${retroHeader}')` : undefined;
 ---
 <!doctype html>
-<!--
-   Hej, du som läser källkod! 👋
-   Tryck "." på sidan, prova ↑ ↑ ↓ ↓ ← → ← → B A, eller öppna konsolen.
--->
-<html lang="sv" data-env={preview ? 'preview' : 'production'}>
+<html lang="sv" data-env={preview ? 'preview' : 'production'} data-retro-header={retroHeader ? 'image' : 'text'} style={htmlStyle}>
   <head>
     <meta charset="utf-8" />
+    {features.eggs && <Fragment set:html={'<!-- Hej, du som läser källkod! 👋 Tryck "." på sidan, prova ↑ ↑ ↓ ↓ ← → ← → B A, eller öppna konsolen. -->'} />}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
@@ -55,22 +58,22 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
     {SITE.links.map((l) => <link rel="me" href={l.href} />)}
     <!-- Sätter temat innan sidan ritas så att den inte blinkar till i fel färg -->
     <script is:inline src="/js/theme-init.js"></script>
-    <script is:inline src="/js/achievements.js" defer></script>
-    <script is:inline src="/js/fx.js" defer></script>
+    {features.eggs && <script is:inline src="/js/achievements.js" defer></script>}
+    {features.eggs && <script is:inline src="/js/fx.js" defer></script>}
     <script is:inline src="/js/site.js" defer></script>
-    <script is:inline src="/js/retro.js" defer></script>
+    {features.retro && <script is:inline src="/js/retro.js" defer></script>}
   </head>
   <body data-egg={egg}>
     {preview && (
       <div class="env-banner" role="note">
-        <strong>Förhandsvisning</strong> på Cloudflare Pages{preview.branch && preview.branch !== 'main' && <> · branch <code>{preview.branch}</code></>}{preview.sha && <> · <a href={`${REPO}/commit/${preview.sha}`}>{preview.sha.slice(0, 7)}</a></>}. Den riktiga sidan finns på <a href="https://christofferlilja.se/">christofferlilja.se</a>.
+        <strong>Förhandsvisning</strong> på Cloudflare Pages{preview.branch && preview.branch !== 'main' && <> · branch <code>{preview.branch}</code></>}{preview.sha && <> · <a href={`${REPO}/commit/${preview.sha}`}>{preview.sha.slice(0, 7)}</a></>}. Den riktiga sidan finns på <a href={`${CONFIG.site.url}/`}>{CONFIG.site.host}</a>.
       </div>
     )}
     <header class="wrap site-header">
       <a href="/" class="brand">{SITE.name}</a>
       <nav>
         <a href="/">Om mig</a>
-        {labData.length > 0 && <a href="/lab/">Lab</a>}
+        {showLab && <a href="/lab/">Lab</a>}
         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Byt till mörkt tema" title="Byt tema">
           <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" /></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z" /></svg>
@@ -82,11 +85,12 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
       <slot />
     </main>
     <footer class="wrap site-footer">
-      <p>© {new Date().getFullYear()} {SITE.name} <button type="button" id="egg-counter" class="egg-counter" hidden></button></p>
+      <p>© {new Date().getFullYear()} {SITE.name}{features.eggs && <> <button type="button" id="egg-counter" class="egg-counter" hidden></button></>}</p>
     </footer>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-    <script type="application/json" id="lab-data" set:html={JSON.stringify(labData)} />
-    <script type="application/json" id="hof-data" set:html={JSON.stringify(hallOfFame)} />
+    <script type="application/json" id="site-config" set:html={JSON.stringify(publicConfig())} />
+    <script type="application/json" id="lab-data" set:html={JSON.stringify(features.lab ? labData : [])} />
+    {features.hallOfFame && <script type="application/json" id="hof-data" set:html={JSON.stringify(hallOfFame)} />}
   </body>
 </html>
 

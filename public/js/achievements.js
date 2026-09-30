@@ -2,6 +2,12 @@
 // Xbox-lik notis, räknare i sidfoten och fyrverkerier + certifikat när alla är hittade.
 // Nya ägg: lägg till dem i EGGS och anropa window.Eggs.unlock('id') där de utlöses.
 (function () {
+  // Namn, domän och strömbrytare från site.config.mjs (inbäddat av Base.astro)
+  var CFG = {};
+  try { CFG = JSON.parse(document.getElementById('site-config').textContent); } catch (e) {}
+  var FEATURES = CFG.features || {};
+  var HOST = CFG.host || location.host;
+
   var EGGS = [
     { id: 'terminal', title: 'Hello, world', desc: 'Öppnade den hemliga terminalen.', hint: 'Tryck på en tangent som GitHub-folk känner igen.' },
     { id: 'konami', title: '↑↑↓↓←→←→BA', desc: 'Knappade in Konami-koden.', hint: 'En klassisk fuskkod från 80-talet.' },
@@ -15,15 +21,15 @@
     { id: 'hal', title: "I can't do that, Dave", desc: 'Försökte stänga av HAL 9000.', hint: 'Försök stänga av systemet.' },
     { id: 'wargames', title: 'The only winning move', desc: 'Startade ett globalt termonukleärt krig.', hint: 'Shall we play a game? Starta något.' },
     { id: 'itcrowd', title: 'Have you tried…', desc: '…turning it off and on again?', hint: 'Starta om.' },
-    { id: 'hire', title: 'Good call', desc: 'sudo hire christoffer. Utmärkt val.', hint: 'Anställ någon. Med sudo.' },
-    { id: 'retro', title: 'Best viewed in 1024×768', desc: 'Reste tillbaka till 2008.', hint: 'Byt tema till ett visst år.' },
-    { id: 'guestbook', title: 'Signera gästboken', desc: 'Försökte signera en gästbok från 2008.', hint: 'Varje riktig 00-talssajt hade en.' },
+    { id: 'hire', title: 'Good call', desc: 'sudo hire ' + CFG.handle + '. Utmärkt val.', hint: 'Anställ någon. Med sudo.' },
+    { id: 'retro', feature: 'retro', title: 'Best viewed in 1024×768', desc: 'Reste tillbaka till 2008.', hint: 'Byt tema till ett visst år.' },
+    { id: 'guestbook', feature: 'retro', title: 'Signera gästboken', desc: 'Försökte signera en gästbok från 2008.', hint: 'Varje riktig 00-talssajt hade en.' },
     { id: 'ratelimit', title: '429 Too Many Requests', desc: 'Blev rate limitad av temaknappen.', hint: 'Byt tema. Ofta. Snabbt.' },
     { id: 'sentinel', title: 'Incident #4711', desc: 'Ignorerade Retry-After tills Sentinel reagerade.', hint: 'Ignorera en rate limit riktigt länge.' },
     { id: 'merge', title: 'Conflict resolved', desc: 'Löste en merge-konflikt i temat.', hint: 'Två ändringar samtidigt blir sällan bra.' },
     { id: 'remote', title: 'Where the previews live', desc: 'Hittade förhandsvisningarna med git remote -v.', hint: 'Fråga git var koden bor.' },
     { id: '404', title: 'Not found', desc: 'Hittade en sida som inte finns.', hint: 'Gå vilse.' }
-  ];
+  ].filter(function (e) { return !e.feature || FEATURES[e.feature]; }); // ägg för avstängda funktioner räknas inte
   var KEY = 'eggs';
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -211,7 +217,8 @@
   }
 
   // --- Finalen: Congratulations + certifikat + topplistan -------------------------
-  var HOF_EDIT_URL = 'https://github.com/lilja85/christofferlilja.se/edit/main/src/data/hall-of-fame.json';
+  var HOF = !!FEATURES.hallOfFame;
+  var HOF_EDIT_URL = CFG.repoUrl + '/edit/main/src/data/hall-of-fame.json';
 
   // openHof: visa "Ta plats på topplistan" utfälld (när man själv öppnar dialogen igen)
   function celebrate(openHof) {
@@ -221,10 +228,10 @@
     fireworks(6000);
     // "Berätta för mig": för den som inte vill (eller kan) göra en PR själv
     function mailHref(hofLine) {
-      var body = 'Hej Christoffer!\n\n' +
-        'Uppdrag slutfört: alla ' + EGGS.length + ' påskägg på christofferlilja.se är hittade (klarad ' + date + ').\n' +
+      var body = 'Hej ' + CFG.firstName + '!\n\n' +
+        'Uppdrag slutfört: alla ' + EGGS.length + ' påskägg på ' + HOST + ' är hittade (klarad ' + date + ').\n' +
         'Inga ägg skadades under jakten. Mitt tålamod med vim däremot …\n\n' +
-        'Jag är tyvärr inte tillräckligt l33t för att göra en pull request, så jag tar den analoga vägen.\n' +
+        (HOF ? 'Jag är tyvärr inte tillräckligt l33t för att göra en pull request, så jag tar den analoga vägen.\n' +
         'Snälla snälla lägg till mig i topplistan! 🙏\n\n' +
         (hofLine
           ? 'Här är min rad till hall-of-fame.json, kontrollsummerad och klar:\n' + hofLine + '\n\n'
@@ -232,9 +239,10 @@
             'GitHub-alias: \n\n' +
             'Jag lovar och svär att mitt GitHub-alias finns bifogat här ovanför.\n' +
             '(Annars kan jag inte läggas in i topplistan, och det vore ju synd.)\n' +
-            'completed: ' + completed + '\n\n') +
+            'completed: ' + completed + '\n\n') : '') +
         'Hack the planet! 🌍';
-      return 'mailto:christoffer.lilja@gmail.com?subject=' + encodeURIComponent('🥚 20/20! Jag gör anspråk på min plats i Hall of Fame') +
+      var subject = '🥚 ' + EGGS.length + '/' + EGGS.length + '! ' + (HOF ? 'Jag gör anspråk på min plats i Hall of Fame' : 'Alla påskägg hittade');
+      return 'mailto:' + CFG.email + '?subject=' + encodeURIComponent(subject) +
         '&body=' + encodeURIComponent(body);
     }
 
@@ -243,14 +251,14 @@
     o.innerHTML =
       '<div class="ach-card" role="dialog" aria-modal="true" aria-labelledby="ach-congrats">' +
       '<h2 id="ach-congrats"><span class="ach-congrats">Congratulations!</span></h2>' +
-      '<p>Du har hittat alla ' + EGGS.length + ' påskägg på christofferlilja.se.</p>' +
+      '<p>Du har hittat alla ' + EGGS.length + ' påskägg på ' + HOST + '.</p>' +
       '<div class="ach-cert">' +
       '<small>Certifikat</small>' +
       '<strong>Certified Easter Egg Hunter</strong>' +
-      '<span>christofferlilja.se · klarad ' + date + '</span>' +
-      '<span class="ach-issuer">Utfärdare: Christoffer Lilja (och Claude)</span>' +
+      '<span>' + HOST + ' · klarad ' + date + '</span>' +
+      '<span class="ach-issuer">Utfärdare: ' + CFG.name + ' (och Claude)</span>' +
       '</div>' +
-      '<details class="ach-hof"' + (openHof ? ' open' : '') + '>' +
+      (HOF ? '<details class="ach-hof"' + (openHof ? ' open' : '') + '>' +
       '<summary>🏅 Ta plats på topplistan</summary>' +
       '<p>Topplistan fylls på via pull requests. Skriv ditt GitHub-användarnamn, kopiera raden och lägg till den ' +
       'sist i <code>hall-of-fame.json</code> från det kontot.</p>' +
@@ -262,9 +270,9 @@
       '</p>' +
       '<p class="ach-hof-note">GitHub forkar repot och skapar PR:en åt dig. CI kontrollerar att raden stämmer och att ' +
       'PR:en kommer från samma konto. En plats per konto, och det är ett ärlighetssystem. 😉</p>' +
-      '</details>' +
+      '</details>' : '') +
       '<p class="ach-actions">' +
-      '<a class="ach-mail" href="' + mailHref(null) + '">Berätta för mig</a>' +
+      (CFG.email ? '<a class="ach-mail" href="' + mailHref(null) + '">Berätta för mig</a>' : '') +
       '<button type="button" class="ach-close">Stäng</button>' +
       '</p></div>';
     document.body.appendChild(o);
@@ -274,7 +282,7 @@
     var copy = o.querySelector('.ach-copy');
     var mail = o.querySelector('.ach-mail');
     // Mejlet får med den färdiga raden när ett giltigt alias är ifyllt, annars en tom rad för aliaset
-    function setMail(hofLine) { mail.href = mailHref(hofLine); }
+    function setMail(hofLine) { if (mail) mail.href = mailHref(hofLine); }
     var render = function () {
       var handle = input.value.trim().replace(/^@/, '');
       setMail(null);
@@ -292,12 +300,14 @@
         copy.disabled = false;
       });
     };
-    input.addEventListener('input', render);
-    copy.addEventListener('click', function () {
-      var text = line.textContent.trim();
-      var done = function () { copy.textContent = 'Kopierad ✓'; setTimeout(function () { copy.textContent = 'Kopiera raden'; }, 2000); };
-      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
-    });
+    if (input) {
+      input.addEventListener('input', render);
+      copy.addEventListener('click', function () {
+        var text = line.textContent.trim();
+        var done = function () { copy.textContent = 'Kopierad ✓'; setTimeout(function () { copy.textContent = 'Kopiera raden'; }, 2000); };
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+      });
+    }
 
     var close = function () { o.remove(); document.removeEventListener('keydown', onKey, true); };
     var onKey = function (e) { if (e.key === 'Escape') close(); };

@@ -1,6 +1,8 @@
 // Påskägg: 2008-läget. Lägger till 00-talsdetaljer när data-theme="2008" och tar bort dem igen annars.
 (function () {
   var root = document.documentElement;
+  var CFG = {};
+  try { CFG = JSON.parse(document.getElementById('site-config').textContent); } catch (e) {}
   var added = [];
   var ORIGINAL_TITLE = document.title;
 
@@ -30,13 +32,13 @@
     return String(4711 + n).padStart(6, '0');
   }
 
-  // "Senast ändrad fredag den 27 september 2026 av Christoffer Lilja", som strftime_swedish gjorde
+  // "Senast ändrad fredag den 27 september 2026 av {namn}", som strftime_swedish gjorde
   function lastModified() {
     var d = new Date(document.lastModified);
     if (isNaN(d)) d = new Date();
     var days = ['söndag', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag'];
     var months = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
-    return 'Senast ändrad ' + days[d.getDay()] + ' den ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' av Christoffer Lilja';
+    return 'Senast ändrad ' + days[d.getDay()] + ' den ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' av ' + CFG.name;
   }
 
   function sparkle(e) {

@@ -3,6 +3,13 @@
 // Allt exponeras på window.Fx och anropas från terminalen i site.js.
 (function () {
   var root = document.documentElement;
+  // Namn och domän från site.config.mjs (inbäddat av Base.astro)
+  var CFG = {};
+  try { CFG = JSON.parse(document.getElementById('site-config').textContent); } catch (e) {}
+  var EGG_CFG = CFG.eggs || {};
+  var HOST = CFG.host || location.host;
+  var SITE_URL = CFG.url || location.origin;
+  var YEAR = new Date().getFullYear();
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function wait(ms) {
@@ -104,7 +111,7 @@
       '<p>Din dator stötte på ett problem och måste startas om. Vi samlar bara in lite felinformation, och sedan startar vi om åt dig.</p>' +
       '<p class="fx-bsod-pct"><span>0</span>% klart</p>' +
       '<div class="fx-bsod-foot"><div class="fx-bsod-qr">' + qr + '</div><div>' +
-      '<p>Mer information om problemet och möjliga lösningar finns på https://christofferlilja.se/lab/</p>' +
+      '<p>Mer information om problemet och möjliga lösningar finns på ' + SITE_URL + (CFG.features && CFG.features.lab ? '/lab/' : '/') + '</p>' +
       '<p>Om du ringer en supporttekniker kan du ge dem den här informationen:<br>Stoppkod: CRITICAL_PROCESS_DIED<br>Vad som misslyckades: ' + reason + '</p>' +
       '</div></div></div>');
     var pct = o.querySelector('.fx-bsod-pct span');
@@ -133,7 +140,7 @@
   }
 
   var BIOS = [
-    'ChristofferOS BIOS v2026.09   (C) 1985–2026 Lilja Megatrends Inc.',
+    EGG_CFG.osName + ' BIOS v' + YEAR + '.09   (C) ' + EGG_CFG.biosSince + '–' + YEAR + ' ' + EGG_CFG.biosVendor,
     '',
     'CPU: Hjärna @ 3 koppar kaffe',
     'Minnestest: 640K OK (ought to be enough for anybody)',
@@ -147,7 +154,7 @@
     return fall()
       .then(function () { return bsod(reason); })
       .then(function (blue) {
-        return post(BIOS.concat(['Återställer från backup ............ OK', 'Startar christofferlilja.se ...'])).then(function () { blue.remove(); });
+        return post(BIOS.concat(['Återställer från backup ............ OK', 'Startar ' + HOST + ' ...'])).then(function () { blue.remove(); });
       })
       .then(function () {
         session('sudo-locked', '1');
@@ -161,7 +168,7 @@
     root.dataset.fx = 'busy';
     var black = overlay('fx-post', '<pre>Stänger av ...</pre>');
     return wait(1200)
-      .then(function () { black.remove(); return post(BIOS.concat(['Startar christofferlilja.se ...'])); })
+      .then(function () { black.remove(); return post(BIOS.concat(['Startar ' + HOST + ' ...'])); })
       .then(function (o) { o.remove(); delete root.dataset.fx; });
   }
 

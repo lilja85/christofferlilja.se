@@ -34,7 +34,23 @@ html[data-theme='2008'] .site-header {
   display: block;
   height: 134px;
   padding: 0;
-  background: url('/retro/header.png') no-repeat top;
+  background: var(--retro-header) no-repeat top;
+}
+/* Utan egen headerbild (retro.headerImage: null i site.config.mjs): grön gradient med namnet i text */
+html[data-theme='2008'][data-retro-header='text'] .site-header {
+  background:
+    linear-gradient(to right, transparent 20px, #0a7a0a 20px, #1fae1f 70%, #0a8f0a 620px, transparent 620px) top / 100% 104px no-repeat,
+    linear-gradient(to right, transparent 20px, #0b5f0b 20px, #0b5f0b 620px, transparent 620px) bottom / 100% 30px no-repeat;
+}
+html[data-theme='2008'][data-retro-header='text'] .brand {
+  visibility: visible;
+  position: absolute;
+  left: 44px;
+  top: 34px;
+  color: #ffffff;
+  font: 34px Georgia, 'Times New Roman', serif;
+  text-decoration: none;
+  text-shadow: 0 2px 3px rgb(0 0 0 / 0.35);
 }
 html[data-theme='2008'] .brand { visibility: hidden; }
 html[data-theme='2008'] .site-header nav {
@@ -295,7 +311,7 @@ html[data-theme='2008'] .theme-toggle.rate-limited::after {
 }
 
 /* Pixelglasögonen i sudo-läge: den fyrkantiga 2008-avataren har ram och padding */
-html[data-theme='2008'] .deal-glasses { top: 45%; left: 26%; }
+html[data-theme='2008'] .deal-glasses { top: var(--glasses-retro-top, 45%); left: var(--glasses-retro-left, 26%); }
 
 @media (max-width: 640px) {
   html[data-theme='2008'] .retro-marquee { padding: 0; background: none; }

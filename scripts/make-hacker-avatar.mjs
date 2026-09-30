@@ -4,8 +4,8 @@
 import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
 
-const SRC = fileURLToPath(new URL('../src/assets/profil-avatar.jpg', import.meta.url));
-const OUT = fileURLToPath(new URL('../src/assets/profil-hacker.png', import.meta.url));
+const SRC = fileURLToPath(new URL('../src/assets/avatar.jpg', import.meta.url));
+const OUT = fileURLToPath(new URL('../src/assets/avatar-hacker.png', import.meta.url));
 
 const SIZE = 128; // antal "pixlar" på bredden
 const SCALE = 3; // uppskalning utan utjämning (384 px)

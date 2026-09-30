@@ -1,5 +1,10 @@
 (function () {
   var root = document.documentElement;
+  // Namn, domän, länkar och strömbrytare från site.config.mjs (inbäddat av Base.astro)
+  var CFG = {};
+  try { CFG = JSON.parse(document.getElementById('site-config').textContent); } catch (e) {}
+  var FEATURES = CFG.features || {};
+  var EGG_CFG = CFG.eggs || {};
   // Påskäggsjakten (public/js/achievements.js)
   function egg(id) { if (window.Eggs) window.Eggs.unlock(id); }
 
@@ -88,8 +93,8 @@
     } else if (strikes === 6) {
       egg('sentinel');
       block(30);
-      toast('[SENTINEL] Incident #4711 skapad.\nAllvarlighetsgrad: Låg · MITRE ATT&CK T1499 Endpoint Denial of Service (mot dina ögon)\nTilldelad: Christoffer · Retry-After: 30 s', 8000);
-      auditLog('[SENTINEL] Incident #4711: upprepade temabyten trots 429. Taktik: T1499 Endpoint DoS. Tilldelad: Christoffer.');
+      toast('[SENTINEL] Incident #4711 skapad.\nAllvarlighetsgrad: Låg · MITRE ATT&CK T1499 Endpoint Denial of Service (mot dina ögon)\nTilldelad: ' + CFG.firstName + ' · Retry-After: 30 s', 8000);
+      auditLog('[SENTINEL] Incident #4711: upprepade temabyten trots 429. Taktik: T1499 Endpoint DoS. Tilldelad: ' + CFG.firstName + '.');
     } else {
       var left = toggle.dataset.retry;
       toast(strikes < 3
@@ -100,6 +105,8 @@
 
   if (toggle) {
     toggle.addEventListener('click', function () {
+      // Utan påskägg är knappen en vanlig ljus/mörk-växlare
+      if (!FEATURES.eggs) { setTheme(currentTheme() === 'dark' ? 'light' : 'dark'); return; }
       // I sudo-läget är knappen ett hänglås som avslutar förhöjningen
       if (root.classList.contains('sudo')) { expireSudo('button'); return; }
       if (rateLimited()) { onBlockedClick(); return; }
@@ -180,6 +187,11 @@
     term.print(stamp + ' ' + text, 'log');
   }
 
+  // Utan 2008-temat blir en sparad 2008-inställning ett vanligt tema
+  if (!FEATURES.retro && root.dataset.theme === '2008') setTheme(darkQuery.matches ? 'dark' : 'light');
+  // Utan påskägg (features.eggs: false) behövs bara temaknappen och toasten
+  if (!FEATURES.eggs) return;
+
   // --- Påskägg: sudo-läge (Konami-koden, "sudo" eller terminalen) -------------
   // Tidsbegränsad förhöjd behörighet, som Entra ID PIM. Stående behörigheter är ju inget att ha.
   var SUDO_SECONDS = 60;
@@ -247,6 +259,9 @@
   } catch (e) {}
 
   var Fx = window.Fx;
+  var HOST = CFG.host || location.host;
+  var HOSTNAME = HOST.split('.')[0];
+  var HANDLE = CFG.handle || 'admin';
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   var term = (function () {
@@ -262,7 +277,7 @@
       el.setAttribute('aria-label', 'Terminal');
       el.hidden = true;
       el.innerHTML =
-        '<div class="term-bar"><span class="term-title">besokare@christofferlilja.se: ~</span>' +
+        '<div class="term-bar"><span class="term-title">besokare@' + HOST + ': ~</span>' +
         '<button type="button" class="term-close" aria-label="Stäng terminalen">×</button></div>' +
         '<div class="term-out" aria-live="polite"></div>' +
         '<label class="term-line"><span class="term-prompt">$</span>' +
@@ -273,7 +288,7 @@
       el.querySelector('.term-close').addEventListener('click', close);
       el.addEventListener('click', function (e) { if (e.target === el || e.target === out) input.focus(); });
       input.addEventListener('keydown', onKey);
-      print('christofferlilja.se terminal. Skriv "help" för att se kommandon, Esc för att stänga.', 'dim');
+      print(HOST + ' terminal. Skriv "help" för att se kommandon, Esc för att stänga.', 'dim');
       buffer.forEach(function (b) { b(); });
       buffer = [];
     }
@@ -314,7 +329,7 @@
     // Titel och prompt följer behörigheten: besokare/$ normalt, root/# i sudo-läge
     function refresh() {
       if (!el) return;
-      el.querySelector('.term-title').textContent = (isRoot() ? 'root' : 'besokare') + '@christofferlilja.se: ~';
+      el.querySelector('.term-title').textContent = (isRoot() ? 'root' : 'besokare') + '@' + HOST + ': ~';
       el.querySelector('.term-prompt').textContent = isRoot() ? '#' : '$';
       el.classList.toggle('term-root', isRoot());
     }
@@ -490,14 +505,14 @@
           });
       },
       hire: function (args) {
-        if ((args[0] || '').toLowerCase() !== 'christoffer') {
-          print('hire: vem? Prova "sudo hire christoffer".', 'err');
+        if ((args[0] || '').toLowerCase() !== HANDLE.toLowerCase()) {
+          print('hire: vem? Prova "sudo hire ' + HANDLE + '".', 'err');
           return;
         }
         egg('hire');
         print('Utmärkt val! 🎉 Så här når du mig:');
-        printLink('→ LinkedIn', 'https://www.linkedin.com/in/lilja85/');
-        printLink('→ christoffer.lilja@gmail.com', 'mailto:christoffer.lilja@gmail.com');
+        (CFG.links || []).forEach(function (l) { printLink('→ ' + l.label, l.href); });
+        if (CFG.email) printLink('→ ' + CFG.email, 'mailto:' + CFG.email);
       },
       vim: function () {
         return commands.vim();
@@ -506,8 +521,8 @@
 
     // rm -rf /* med sudo: terminalen rasslar, sidan rasar, blåskärm, omstart
     function chaos() {
-      var files = ['/lab/homelab-del-1-proxmox-pihole', '/assets/profil-avatar.jpg', '/etc/humor', '/etc/sudoers',
-        '/home/christoffer/cv.pdf', '/usr/share/kaffe', '/var/log/påskägg.log', '/js/site.js', '/css/retro.css',
+      var files = [labPosts.length ? labPosts[0].url.replace(/\/$/, '') : '/lab', '/assets/avatar.jpg', '/etc/humor', '/etc/sudoers',
+        '/home/' + HANDLE + '/cv.pdf', '/usr/share/kaffe', '/var/log/påskägg.log', '/js/site.js', '/css/retro.css',
         '/boot/vmlinuz', '/bin/bash', '/dev/null (hur?)', '/.well-known/security.txt', '/humans.txt', '/index.html'];
       var lines = files.map(function (f) { return 'removed \'' + f + '\''; });
       return type(lines, 110, 'err')
@@ -552,12 +567,12 @@
       if (first === '-l') {
         egg('sudo-l');
         [
-          'Matchande standardposter för besökare på christofferlilja:',
+          'Matchande standardposter för besökare på ' + HOSTNAME + ':',
           '    lecture=always, insults, pim_timeout=60s',
           '',
-          'Användaren besökare får köra följande kommandon på christofferlilja:',
+          'Användaren besökare får köra följande kommandon på ' + HOSTNAME + ':',
           '    (root) NOPASSWD: /usr/bin/make me a sandwich',
-          '    (root) NOPASSWD: /usr/bin/hire christoffer',
+          '    (root) NOPASSWD: /usr/bin/hire ' + HANDLE,
           '    (root) /sbin/shutdown, /sbin/reboot',
           '    (root) /usr/local/bin/launch',
           '    (root) /usr/bin/vim',
@@ -580,8 +595,8 @@
         print('  whoami        vem är jag?');
         print('  ls [lab]      lista innehåll');
         print('  cat <fil>     visa en fil (prova about.txt)');
-        print('  open <mål>    linkedin, lab, security, humans, preview, production');
-        print('  theme <val>   light | dark | 2008');
+        print('  open <mål>    ' + Object.keys(openTargets()).join(', '));
+        print('  theme <val>   ' + THEMES.join(' | '));
         print('  sudo [-k|-l]  tidsbegränsad förhöjd behörighet (-l visar vad du får göra)');
         print('  git <kmd>     status | pull | merge <light|dark> | push | blame | remote -v');
         print('  achievements  hur många påskägg har du hittat?');
@@ -594,7 +609,7 @@
           print('root (tillfälligt, via PIM). Kom ihåg att lämna tillbaka behörigheten.');
           return;
         }
-        print('besökare. Men sidan handlar om christoffer, DevSecOps-konsult och lösningsarkitekt i Jönköping.');
+        print('besökare. Men sidan handlar om ' + HANDLE + ', ' + CFG.title + (CFG.location ? ' i ' + CFG.location : '') + '.');
         print('Grupper: besökare, nyfikna');
       },
       ls: function (args) {
@@ -604,17 +619,15 @@
           return;
         }
         if (args.some(function (a) { return /^-[a-z]*a/.test(a); })) {
-          print('.  ..  .bash_history  .secrets  .well-known/  about.txt  humans.txt  lab/');
+          print('.  ..  .bash_history  .secrets  .well-known/  about.txt  humans.txt' + (FEATURES.lab ? '  lab/' : ''));
           return;
         }
-        print('about.txt  humans.txt  lab/');
+        print('about.txt  humans.txt' + (FEATURES.lab ? '  lab/' : ''));
       },
       cat: function (args) {
         var f = args[0] || '';
         if (f === 'about.txt') {
-          print('Utvecklare sedan 2007, numera mest säkerhet i leveranskedjan:');
-          print('Azure DevOps, GitHub Advanced Security, Terraform, Entra ID och IAM/IGA.');
-          print('Bygger hellre lösningar som teamen vill använda än regler de måste följa.');
+          (EGG_CFG.about || []).forEach(function (l) { print(l); });
         } else if (f === '.bash_history') {
           print('# förra besökarens historik. Vad höll hen på med?', 'dim');
           PREVIOUS_VISITOR.forEach(function (h) { print(h); });
@@ -631,14 +644,7 @@
         }
       },
       open: function (args) {
-        var targets = {
-          linkedin: 'https://www.linkedin.com/in/lilja85/',
-          preview: 'https://christofferlilja-se.pages.dev/',
-          production: 'https://christofferlilja.se/',
-          lab: '/lab/',
-          security: '/.well-known/security.txt',
-          humans: '/humans.txt'
-        };
+        var targets = openTargets();
         var href = targets[args[0]];
         if (!href) { print('open: okänt mål. Prova: ' + Object.keys(targets).join(', '), 'err'); return; }
         print('Öppnar ' + href + ' ...', 'dim');
@@ -646,8 +652,8 @@
       },
       theme: function (args) {
         if (args[0] === 'light' || args[0] === 'dark') { setTheme(args[0]); print('Tema: ' + args[0]); }
-        else if (args[0] === '2008') { setTheme('2008'); print('Spolar tillbaka till 2008 ... Kom ihåg att ringa upp modemet. 📞', 'log'); }
-        else print('Användning: theme light | dark | 2008', 'err');
+        else if (args[0] === '2008' && FEATURES.retro) { setTheme('2008'); print('Spolar tillbaka till 2008 ... Kom ihåg att ringa upp modemet. 📞', 'log'); }
+        else print('Användning: theme ' + THEMES.join(' | '), 'err');
       },
       sudo: sudoCmd,
       git: function (args) {
@@ -676,14 +682,16 @@
           }).then(open);
         }
         if (sub === 'remote') {
-          if (args[1] !== '-v') { print('origin'); print('preview'); return; }
+          if (args[1] !== '-v') { print('origin'); if (CFG.previewUrl) print('preview'); return; }
           egg('remote');
-          print('origin   https://github.com/lilja85/christofferlilja.se.git (fetch)');
-          print('origin   https://github.com/lilja85/christofferlilja.se.git (push)');
-          print('preview  https://christofferlilja-se.pages.dev (Cloudflare Pages, varje branch får en egen)');
-          print(root.dataset.env === 'preview'
-            ? '(du är i förhandsvisningen just nu. Produktionen: open production)'
-            : '(nyfiken på vad som är på väg? open preview)', 'dim');
+          print('origin   ' + CFG.repoUrl + '.git (fetch)');
+          print('origin   ' + CFG.repoUrl + '.git (push)');
+          if (CFG.previewUrl) {
+            print('preview  ' + CFG.previewUrl + ' (Cloudflare Pages, varje branch får en egen)');
+            print(root.dataset.env === 'preview'
+              ? '(du är i förhandsvisningen just nu. Produktionen: open production)'
+              : '(nyfiken på vad som är på väg? open preview)', 'dim');
+          }
           return;
         }
         if (sub === 'push' && (args.indexOf('--force') !== -1 || args.indexOf('-f') !== -1)) {
@@ -693,8 +701,9 @@
         }
         if (sub === 'push') { print('Everything up-to-date'); return; }
         if (sub === 'blame') {
-          print('^7e55a5c (Christoffer Lilja 2008-03-26) <?php echo $myAge; ?>');
-          print('Ja, det var jag. Allt är mitt fel. Sedan 2004.', 'dim');
+          var blame = EGG_CFG.blame || { commit: 'c0ffee1', date: CFG.launched || '', line: '<h1>' + CFG.name + '</h1>' };
+          print('^' + blame.commit + ' (' + CFG.name + ' ' + blame.date + ') ' + blame.line);
+          print(blame.note || 'Ja, det var jag. Allt är mitt fel.', 'dim');
           return;
         }
         if (!sub) { print('användning: git status | pull | merge <light|dark> | push | blame'); return; }
@@ -742,7 +751,7 @@
           else print('  ??? ' + e.hint, 'dim');
         });
         if (n === all.length) print('Alla hittade! Kör "achievements --celebrate" för att fira igen. 🎆');
-        if (n > 0) print('🏅 Topplista: kör "leaderboard". Vill du börja om? Kör "ragequit".', 'dim');
+        if (n > 0) print((FEATURES.hallOfFame ? '🏅 Topplista: kör "leaderboard". ' : '') + 'Vill du börja om? Kör "ragequit".', 'dim');
       },
       history: function () {
         history.forEach(function (h, i) { print(String(i + 1).padStart(4, ' ') + '  ' + h); });
@@ -750,7 +759,7 @@
       date: function () { print(new Date().toString()); },
       uname: function () {
         var env = root.dataset.env === 'preview' ? 'förhandsvisning på Cloudflare Pages' : 'produktion på webbhotellet';
-        print('ChristofferOS 2026 (Astro/statisk, ' + env + ') x86_64 – inga cookies, ingen spårning');
+        print(EGG_CFG.osName + ' ' + new Date().getFullYear() + ' (Astro/statisk, ' + env + ') x86_64 – inga cookies, ingen spårning');
       },
       pwd: function () { print(isRoot() ? '/root' : '/home/besokare'); },
       cd: function () { print('cd: det finns ingenstans att gå. Det här är en statisk sida. 🙂', 'dim'); },
@@ -761,7 +770,20 @@
     commands.trophies = commands.achievements;
 
     // Topplistan finns först när man hittat ett ägg. Innan dess låtsas kommandot inte finnas.
-    function hofUnlocked() { return !!(window.Eggs && window.Eggs.found().length > 0); }
+    function hofUnlocked() { return !!(FEATURES.hallOfFame && window.Eggs && window.Eggs.found().length > 0); }
+
+    var THEMES = FEATURES.retro ? ['light', 'dark', '2008'] : ['light', 'dark'];
+    // Mål för "open": länkarna i konfigurationen (med gemener) plus sajtens egna sidor
+    function openTargets() {
+      var t = {};
+      (CFG.links || []).forEach(function (l) { t[l.label.toLowerCase().replace(/\s+/g, '-')] = l.href; });
+      if (FEATURES.lab) t.lab = '/lab/';
+      t.security = '/.well-known/security.txt';
+      t.humans = '/humans.txt';
+      if (CFG.previewUrl) t.preview = CFG.previewUrl + '/';
+      t.production = CFG.url + '/';
+      return t;
+    }
     function formatEpoch(t) { return new Date(t * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'; }
     commands.leaderboard = function () {
       print('🏅 Hall of fame: först till kvarn med alla ' + window.Eggs.all().length + ' påskägg');
@@ -857,7 +879,7 @@
   var art = [
     '┌───────────────────────────────────┐',
     '│ $ whoami                          │',
-    '│ christoffer  (devsecops, nörd)    │',
+    '│ ' + (HANDLE + '  (' + EGG_CFG.tagline + ')').slice(0, 33).padEnd(33) + ' │',
     '│ $ cat /etc/motd                   │',
     '│ Välkommen! Bygg säkert, ha kul.   │',
     '└───────────────────────────────────┘'
@@ -869,6 +891,6 @@
     '• Vem gjorde sidan? Se /humans.txt\n' +
     '• Tips: tryck "." för en terminal och kör "sudo -l", eller prova Konami-koden (↑ ↑ ↓ ↓ ← → ← → B A).\n' +
     '• Psst: det går att skriva "sudo" direkt på sidan också.\n' +
-    '• Det finns 20 påskägg. Kör "achievements" i terminalen för att se hur många du hittat.'
+    '• Det finns ' + (window.Eggs ? window.Eggs.all().length : 'flera') + ' påskägg. Kör "achievements" i terminalen för att se hur många du hittat.'
   );
 })();

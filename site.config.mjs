@@ -24,7 +24,7 @@ export default {
     // Kort alias med gemener utan mellanslag, används i terminalen (t.ex. "sudo hire christoffer")
     handle: 'christoffer',
     github: 'lilja85',
-    title: 'DevSecOps-konsult och lösningsarkitekt',
+    title: 'DevSecOps Engineer',
     company: 'Consid',
     location: 'Jönköping',
     country: 'Sverige',

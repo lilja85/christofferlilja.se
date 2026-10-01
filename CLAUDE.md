@@ -128,6 +128,11 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   Kör manuellt med `dry_run` (standard vid manuell körning) innan ändringar som flyttar eller tar bort filer.
 - `upload-artifact` behöver `include-hidden-files: true`, annars saknas `.htaccess` och `.well-known/`.
 - HTTPS-omdirigering görs i DirectAdmin ("Force SSL"), inte i `.htaccess` (loop bakom nginx).
+- **Kontrollera headers med GET, aldrig bara `curl -I`.** På webbhotellet har HEAD gått till Apache (som läser
+  `.htaccess`) medan nginx svarat själv på GET för större statiska filer, utan headers. Använd
+  `curl -sD - -o /dev/null <url>` eller `node scripts/check-live-headers.mjs`, som kör efter varje deploy och
+  varje vecka (`.github/workflows/headers.yml`). CSP:n och Referrer-Policy finns också som meta-taggar i
+  `Base.astro` (genererade från `security-headers.mjs`) som reservskydd.
 
 ## Testa
 

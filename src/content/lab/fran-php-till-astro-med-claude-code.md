@@ -3,7 +3,7 @@ title: 'Från handkodad PHP till Astro, med Claude Code som parprogrammerare'
 description: 'Hur jag byggde om min sida från 2008 till en statisk Astro-sida, och vad det innebar att göra det tillsammans med en AI-agent i terminalen.'
 date: 2026-09-27
 tags: [claude-code, ai, astro, devsecops, påskägg]
-draft: true
+draft: false
 ---
 
 <!--
@@ -14,18 +14,27 @@ draft: true
 
 Mellan ungefär 2004 och 2008 byggde jag christofferlilja.se för hand. PHP, XHTML, CSS och lite
 Prototype/Scriptaculous, med en egen gästboksklass, ett kontaktformulär med captcha och en
-tidsrapportering bakom inloggning. Varenda rad skrev jag själv. Nu, nästan tjugo år senare, byggde
-jag om den, och den här gången skrev jag nästan ingen kod själv. Jag gjorde det tillsammans med
-[Claude Code](https://claude.com/claude-code), Anthropics AI-agent som körs i terminalen och kan
-läsa filer, köra kommandon och skriva kod.
+tidsrapportering bakom inloggning. Varenda rad skrev jag själv dels med tanke på att visa att
+jag faktiskt kan, men mest för att jag tyckte det var kul att få testa koda hemsidor. Nu, nästan
+tjugo år senare, byggde jag om den, och den här gången skrev jag nästan ingen kod själv. Jag gjorde
+det tillsammans med [Claude Code](https://claude.com/claude-code), Anthropics AI-agent som körs i
+terminalen och kan läsa filer, köra kommandon och skriva kod.
 
-> ✍️ **Fyll i:** Vad sidan betydde för dig då, och varför det kändes lite sorgligt eller skönt att ersätta den.
+Att jag nu inte skrivit koden själv känns både lite vemodigt och lite skrämmande. Kan jag stå bakom koden
+på sidan och kan man anse att jag har relevanta kunskaper? Jag tycker väldigt mycket om att koda, men
+jag hade också gärna sluppit all boilerplate-kod man måste skriva. Samtidigt brukar man säga att AI
+bara förstärker det man själv kan. Låter man den koda på utan riktlinjer blir det ett resultat, men
+är det vad du ville? Jag håller nog med och resultatet av denna sida speglar verkligen vem jag är :)
+
+Det är oavsett väldigt skönt att bli av med den gamla sidan och mitt dålig samvete eftersom den inte har
+fått knappt någon kärlek sedan 2012. Jag behövde antingen lägga ner sidan eller göra vad jag gjorde nu.
 
 ## Utgångsläget
 
 Sidan var hopplöst föråldrad. Den presenterade mig som SharePoint-utvecklare, länkade till
-Google+ och hade ett CV från 2012. I praktiken var det LinkedIn som gjorde jobbet, och
-liljaonline.se skickade vidare till about.me. Frågan var vad sidan skulle vara till för över huvud taget.
+Google+ (stängdes april 2019) och hade ett CV från 2012. I praktiken är det LinkedIn som gör jobbet, och
+[liljaonline.se](https://liljaonline.se) skickade vidare till [about.me](https://about.me/christofferlilja).
+Frågan var vad sidan skulle vara till för över huvud taget.
 
 Jag startade Claude Code i *plan mode*, där agenten bara får läsa och fråga, inte ändra något,
 och bad den gå igenom sidan och ge förslag. Den läste koden och mitt nya CV och frågade tre saker:
@@ -39,8 +48,8 @@ Var den skulle ligga ändrades längs vägen (se Ut på nätet).
 
 - **[Astro](https://astro.build)** bygger statisk HTML från mallar och Markdown. Ingen server,
   ingen databas, inget att hacka. Labbanteckningarna är vanliga `.md`-filer.
-- **GitHub** lagrar koden och **GitHub Actions** bygger och deployar till mitt vanliga webbhotell vid varje push.
-- **GitHub Actions** kör bygge och `npm audit`. Actions är fastlåsta på commit-SHA och
+- **GitHub** lagrar koden. **GitHub Actions** bygger, kör `npm audit` och deployar till mitt vanliga
+  webbhotell när en pull request mergas till `main`. Actions är fastlåsta på commit-SHA och
   `permissions` är så snäva som möjligt. Dependabot håller beroendena uppdaterade.
 - **Säkerhetsheaders** via `.htaccess`: CSP utan inline-skript, HSTS och så vidare. Det är därför
   all JavaScript ligger i egna filer.
@@ -59,9 +68,15 @@ Eftersom jag är utvecklare, och lite nördig, ville jag ha påskägg. Jag avsl�
 - Öppna sidan i två flikar och byt tema i båda.
 - Det finns ett tema från 2008, med besöksräknare och allt.
 - Det finns 20 påskägg totalt. Kör `achievements` i terminalen för att se hur många du hittat. Den som hittar
-  alla blir firad med fyrverkerier, som när Outlook firar ett "Congratulations", och får ett certifikat med verifierings-id.
+  alla blir firad med fyrverkerier, som när Outlook firar ett "Congratulations", och får ett certifikat.
+- Med certifikatet kan du ta plats på en topplista, via en pull request till repot. Hur det hänger ihop, och
+  varför det krävde lite säkerhetstänk, har jag skrivit om i
+  [En topplista via pull requests i ett publikt repo](/lab/topplista-via-pull-requests/).
+- Och den som tröttnar kan köra `ragequit` och börja om från noll.
 
-> ✍️ **Fyll i:** Ditt favoritpåskägg och varför.
+Mitt absoluta favoripåskägg är när man ska försöka aktivera sig för sudo igen efter att ha blivit utelåst
+och chefen i sista steget bara "godkänner, som vanligt". Då skrattade jag högt, eftersom det är något jag
+jobbar med dagligen och försöker mota.
 
 ### Ut på nätet
 
@@ -76,6 +91,18 @@ HSTS går inte att styra. Det slutade med att **GitHub Actions bygger sidan och 
 mitt vanliga webbhotell** med FTPS. Headers sätts i en `.htaccess`, och ingen DNS behöver ändras.
 Det blev dessutom en bra labb i säker deploy, som jag skrivit om i
 [Deploy med GitHub Actions och FTPS till ett vanligt webbhotell](/lab/deploy-med-github-actions-och-ftps/).
+
+### Går att forka
+
+När sidan väl fanns ville jag att den skulle gå att återanvända. Allt personligt ligger nu i en enda fil,
+`site.config.mjs`: namn, texter, länkar, domän, repo och påskäggens texter, som operativsystemet
+`ChristofferOS` och BIOS-tillverkaren `Lilja Megatrends Inc.`. Astro-sidorna läser filen direkt. Påskäggen i
+webbläsaren får en publik del av den inbäddad som JSON i sidan, eftersom CSP:n inte tillåter inline-skript.
+Påskäggen, 2008-temat, topplistan och labbet går att slå av var för sig, och antalet ägg räknas om efter det.
+
+För att se att inget personligt läckte byggde Claude sidan åt en påhittad person, Ada Lovelace på
+`ada.example`, och sökte igenom hela bygget efter mitt namn, min domän och min e-post. Inga träffar. Hur man
+gör den till sin egen står i README:n i repot.
 
 ## Det som strulade
 
@@ -109,16 +136,14 @@ Det blev dessutom en bra labb i säker deploy, som jag skrivit om i
 
 Innan någon ny kod skrevs pekade Claude på att den gamla sidan fortfarande låg live, med bland annat:
 
-- ett databaslösenord i klartext i en inkluderad PHP-fil
-- en publik `phpinfo()`-sida
-- ett kontaktformulär som tog avsändaradressen direkt från användaren (header injection)
-- en `.htpasswd` i webbroten
+- ett databaslösenord i klartext i en inkluderad PHP-fil, men databasen var borta sen länge.
+- en publik `phpinfo()`-sida, eftersom jag förr i tiden använde den för att se mina php-inställningar och såg inte problemet då
+- ett kontaktformulär som tog avsändaradressen direkt från användaren (header injection), men formuläret fungerade inte ändå eftersom captchan inte längre fungerade
+- en `.htpasswd` i webbroten, men den var bara för att testa just lsöenskydda mappar
 
-Pinsamt för någon som jobbar med DevSecOps, men också en bra påminnelse: gammal kod som ingen
-tittar på är fortfarande kod som körs. Lite tur var det också: databasen som lösenordet gick till
-fanns inte längre. Den försvann när jag bytte webbhotell 2022, och sidan hade bara följt med.
-`phpinfo()`-sidan och kontaktformuläret har jag tagit bort, och den gamla koden ligger nu i ett
-lokalt git-repo med hemligheterna exkluderade.
+Skulle kunnat vara pinsamt för någon som jobbar med DevSecOps, men också en bra påminnelse: gammal kod som ingen
+tittar på är fortfarande kod som körs. `phpinfo()`-sidan och kontaktformuläret har jag tagit bort, och den gamla koden ligger nu i ett lokalt git-repo med hemligheterna exkluderade. Databaslösenordet behöver inte 
+roteras, eftersom databasen inte finns längre.
 
 Några saker till som jag tar med mig:
 
@@ -127,7 +152,8 @@ Några saker till som jag tar med mig:
 - **Metadata i bilder.** Mitt gamla CV från 2012, som skulle med i arkivet, innehöll hemadress,
   födelsedatum och mitt nuvarande mobilnummer. Och originalet till profilbilden innehöll
   fotografens namn, kontaktuppgifter och arbetsgivare i EXIF-datan. Den bilden låg i
-  repot en stund innan vi upptäckte det. Den byggda sidan var ren, eftersom bildbehandlingen tar bort
+  repot en stund innan vi upptäckte det. Samma sak med CV:t på sidan: det är en webbversion utan
+  telefonnummer, eftersom allt i `public/` publiceras och ligger kvar i git-historiken. Den byggda sidan var ren, eftersom bildbehandlingen tar bort
   metadata, men källfilen gjorde det inte. Claude sökte igenom hela git-historiken, både diffar
   och metadata i alla bilder som någonsin legat i repot. Sedan skrevs historiken om med
   `git filter-branch`, efter en säkerhetskopia som `git bundle`, och till sist fick repot skapas på nytt
@@ -151,21 +177,32 @@ Jag föreslog punkt, som på GitHub. Claude höll med om att backtick är en dö
 tangentbord, och förklarade att traditionen från Quake-konsolen handlar om *tangenten under Esc*,
 inte om tecknet. Nu fungerar både `.` och `§`.
 
-> ✍️ **Fyll i:** Hur det kändes att styra i stället för att skriva själv. Gick det snabbare? Tappade du något?
-
-> ✍️ **Fyll i:** Hur du hanterade behörigheterna för agenten, till exempel plan mode, godkännanden eller auto mode, och vad du tycker om det ur ett säkerhetsperspektiv.
+Att styra istället för att skriva själv är oändligt mycket snabbare. Men helt ärligt har jag inte helt koll på
+koden som genereras. Ju viktigare kod desto mer antar jag att den behöver granskas. Denna sida är inte alls
+viktig så jag har inte kontrollerat alls mycket utan snarare agerat krav och testare.
 
 ## Vad jag tar med mig
 
-> ✍️ **Fyll i:** Dina egna slutsatser. Några frågor att utgå från: Vad var AI:n bra på, och var behövdes du?
-> Skulle du jobba så här i ett kunduppdrag? Vad betyder det för säkerheten i leveranskedjan när
-> en agent skriver koden?
+Något jag tar med mig och som jag testade var att sätta tillbaka agenten flera gånger till plan-mode. Den
+frågade rätt mycket även i auto men väljer jag plan mode med flit är jag säker på att lite större och kanske
+osäkrare förändring gås igenom lite extra först och kan desstom gå fram och tillbaka några gånger innan
+några förändringar görs.
+
+AI:n var väldigt bra på att testa sina egna förändringar och fick stoppa och göra om flera gånger för egna fel
+som den introducerade. Väldigt skönt att slippa mcyket av den ping-pongen, även om det blev en del ändå.
+
+Där jag framförallt behövdes var att tydligt styra vart jag ville. Att bara göra en sida klarar den galant,
+men är det du som valt sidan eller AI som tagit fram något generiskt som ser bra ut utan så mycket eftertanke?
+Och förutom sidan tyckte jag det var kul att fokusera på själva leveranssteget med kontroller i de actions som
+körs och liknande.
+
+Det var också kul att testa GitHub issues. Jag har kört det tidigare men inte använt som mina interna
+anteckningar för vad jag ville göra. Kollar man dem kan man också delvis förstå hur tankarna gick under tiden
+sidan togs fram och vilka problem jag ville lösa.
 
 ## Nästa steg
 
-<!-- Status 2026-09-28: sidan är live på christofferlilja.se och deployas av GitHub Actions med FTPS.
-     Båda labbanteckningarna är utkast, så Lab-länken i menyn är dold tills en publiceras. -->
+<!-- Status 2026-09-30: sidan är live på christofferlilja.se och deployas av GitHub Actions med FTPS.
+     Alla labbanteckningar är utkast, så Lab-länken i menyn är dold tills en publiceras. -->
 
-- **Peka om liljaonline.se** hit i stället för till about.me.
-- **Fylla i ✍️-rutorna** i den här och i [deploy-anteckningen](/lab/deploy-med-github-actions-och-ftps/), och publicera.
-- **Skriva vidare om [homelabbet](/lab/):** Proxmox i källaren, som hittills bara kör Pi-hole.
+- **Peka om liljaonline.se** hit i stället för till about.me?

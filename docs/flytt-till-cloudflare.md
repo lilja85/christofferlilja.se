@@ -29,6 +29,8 @@ namnservrarna för christofferlilja.se och var sajten serveras.
 - [ ] Produktionsbranch `main`, egen domän `christofferlilja.se`. www → apex med en Redirect Rule (301).
 - [ ] Always Use HTTPS och HSTS på. Överväg HSTS preload när allt är stabilt.
 - [ ] Kontrollera att PR:er från forkar **inte** byggs automatiskt (repot tar emot topplist-PR:er).
+- [ ] Cloudflares Git-koppling deployar `main` direkt vid merge, precis som Actions gör i dag. Inget extra
+  godkännande (*Required reviewers* provades och togs bort), så ingen API-token eller deploy från Actions behövs.
 - [ ] Node-version och byggkommando som i CI (`npm run build`).
 - [ ] Alla headers i `scripts/security-headers.mjs` (även Cross-Origin-Opener-Policy och
   Cross-Origin-Resource-Policy) skrivs till `_headers` av postbuild. Lägg inte in headers i Cloudflares
@@ -58,10 +60,10 @@ namnservrarna för christofferlilja.se och var sajten serveras.
 
 ## 4. Städa efter flytten
 
-- [ ] Ta bort repo-variabeln `DEPLOY_METHOD`, miljön `production` och dess secrets i GitHub.
+- [ ] Ta bort repo-variabeln `DEPLOY_METHOD`, miljön `production` och dess secrets (`DEPLOY_PATH`, `FTP_*`) i GitHub.
 - [ ] Ta bort FTP-kontot hos Inleed och töm `public_html` för domänen (behåll det som e-posten behöver).
 - [ ] README (Publicering, Förhandsvisningar), `CLAUDE.md` (Deploy) och labbanteckningen om deployen.
-  Flytten är värd en egen labbanteckning: varför webbhotellet till slut inte räckte.
+  Labbanteckningen finns som utkast i `src/content/lab/flytt-till-cloudflare-pages.md`: fyll i ✍️-rutorna.
 
 ## Klart när
 

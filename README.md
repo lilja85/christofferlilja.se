@@ -59,8 +59,7 @@ npm run preview
    Commit-meddelanden och PR-titlar följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/),
    t.ex. `feat(eggs): lägg till git blame` eller `fix(retro): headern täcker menyn`.
 2. Öppna en PR. CI bygger och Cloudflare lägger en förhandsvisning i PR:en.
-3. Granska förhandsvisningen och merga (vanlig merge-commit).
-4. Godkänn deployen i Actions-körningen (*Review deployments*). Först då deployas ändringen till produktion.
+3. Granska förhandsvisningen och merga (vanlig merge-commit). Mergen deployar till produktion.
 
 Varje commit i PR:en hamnar på `main`, så CI (`scripts/check-commits.mjs`) kontrollerar att alla commit-meddelanden
 i PR:en följer Conventional Commits. Merge-commits hoppas över. Dependabot är inställd på `build(deps)`/`ci(deps)`.
@@ -72,8 +71,7 @@ i PR:en följer Conventional Commits. Merge-commits hoppas över. Dependabot är
 1. Repo-variabel `DEPLOY_METHOD` = `ftps` (eller `ssh`).
 2. Miljön `production` (endast `main`) med secrets `DEPLOY_PATH` och `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`
    (eller `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`).
-3. *Required reviewers* på miljön `production`, så att varje deploy måste godkännas.
-4. Kör workflowen manuellt (Actions → CI → Run workflow). `dry_run` är förvalt och listar bara ändringarna.
+3. Kör workflowen manuellt (Actions → CI → Run workflow). `dry_run` är förvalt och listar bara ändringarna.
 
 Deployen synkar med radering: filer som inte finns i `dist/` tas bort från webbhotellet.
 

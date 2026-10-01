@@ -59,12 +59,13 @@ komma fram:
 
 ### Cloudflare Pages som produktion
 
-- `main` blir produktion, med domänen och en omdirigering från www.
+- `main` blir produktion, med domänen och en omdirigering från www. Cloudflare deployar vid varje merge till
+  `main`, precis som GitHub Actions gjorde till webbhotellet.
 - Bygget skriver redan `_headers` från samma lista som `.htaccess`. Skillnaden blir att produktionen inte ska
   ha `X-Robots-Tag: noindex` och den gula förhandsvisningsbannern, men förhandsvisningarna ska ha kvar dem.
 - PR:er från forkar ska inte byggas automatiskt, eftersom repot tar emot pull requests till topplistan.
 
-> ✍️ **Fyll i:** Hur du löste godkännandet före produktion (se Säkerhetsvinkeln), och hur det fungerade i praktiken.
+> ✍️ **Fyll i:** Hur det gick att koppla domänen och sätta upp produktionen i Cloudflare.
 
 ### Det som kunde tas bort
 
@@ -73,7 +74,7 @@ Det bästa med flytten är allt som inte behövs längre:
 - `index.php`-tricket för startsidan, och kontrollen som stoppar bygget om sidan innehåller `<?`.
 - CSP:n och Referrer-Policy som meta-taggar, som bara fanns som reserv för sidorna utan headers.
 - `.htaccess`-delarna för webbhotellet, och varningarna i headerkontrollen. Nu kräver den headers överallt.
-- FTP-kontot på webbhotellet och uppgifterna i GitHub.
+- FTP-kontot på webbhotellet, miljön `production` och uppgifterna i GitHub, och deploy-jobbet i workflowen.
 
 > ✍️ **Fyll i:** Något mer som visade sig onödigt, eller något du saknar från webbhotellet?
 
@@ -85,10 +86,9 @@ Det bästa med flytten är allt som inte behövs längre:
 
 - **Headers på allt, från ett ställe.** Alla säkerhetsheaders kommer från en lista i repot och hamnar i
   `_headers`. Inget i Cloudflares inställningar, så att de inte finns på två ställen som glider isär.
-- **Godkännande före produktion.** På webbhotellet väntar varje deploy på mitt godkännande (*Required
-  reviewers* i GitHub). Cloudflares vanliga Git-koppling deployar `main` direkt vid merge, och då försvinner
-  den spärren. Alternativet är att deploya produktionen från GitHub Actions med en API-token som bara får
-  ändra just det här Pages-projektet, i samma miljö med godkännande som förut.
+- **Inga deploy-uppgifter i GitHub.** Cloudflare hämtar koden själv via sin GitHub-koppling, så inga lösenord
+  eller tokens för produktionen behöver ligga i repots secrets. `main` är fortfarande skyddad: bara en
+  pull request med godkänt CI-bygge kan nå produktionen.
 - **DNSSEC under bytet.** Stängs inte DNSSEC av före bytet av namnservrar matchar signaturerna inte längre,
   och domänen slutar fungera för alla som validerar, vilket många svenska internetleverantörer gör.
 - **E-posten utanför proxyn.** Mejlservern ska inte gå via Cloudflare, och SPF-posten ska fortfarande

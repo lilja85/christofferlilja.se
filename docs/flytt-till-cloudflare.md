@@ -43,7 +43,11 @@ namnservrarna för christofferlilja.se och var sajten serveras.
 - [ ] `.htaccess` behövs inte på Cloudflare (404-sidan hittas automatiskt, HTTPS och www sköts av Cloudflare).
   Bestäm om den ska vara kvar för den som forkar och kör på ett webbhotell.
 - [ ] `scripts/check-live-headers.mjs`: kräv headers på alla adresser igen (ta bort `REQUIRED`/varningarna).
-- [ ] Meta-taggarna för CSP och Referrer-Policy i `Base.astro`: kan vara kvar som extra skydd eller tas bort.
+- [ ] Ta bort meta-taggarna för CSP och Referrer-Policy i `Base.astro` (och kommentaren om dem i
+  `security-headers.mjs`). De är ett reservskydd för sidorna som webbhotellets nginx skickar utan headers.
+  På Cloudflare får alla filer riktiga headers, så taggarna gör inget extra. Däremot blir det två ställen
+  där CSP:n gäller: en lättare CSP för en enskild sida, eller sådant som bara fungerar i headers (som
+  `report-to`), skulle fortfarande stoppas av meta-taggen och vara svårt att felsöka.
 - [ ] `.github/workflows/ci.yml`: deploy-jobbet körs inte utan `DEPLOY_METHOD`. Ta bort det eller behåll det
   för forkar; headerkontrollen efter deploy behöver i så fall flyttas (t.ex. till `headers.yml` efter
   Cloudflares bygge).

@@ -133,6 +133,8 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
   `curl -sD - -o /dev/null <url>` eller `node scripts/check-live-headers.mjs`, som kör efter varje deploy och
   varje vecka (`.github/workflows/headers.yml`). CSP:n och Referrer-Policy finns också som meta-taggar i
   `Base.astro` (genererade från `security-headers.mjs`) som reservskydd.
+- **Planerat: produktionen flyttar till Cloudflare Pages.** Checklistan (DNS, DNSSEC, e-post, kod som ska
+  ändras eller tas bort) finns i `docs/flytt-till-cloudflare.md`. Håll den aktuell när något webbhotellsspecifikt läggs till.
 - **Startsidan deployas som `index.php`** (`site.phpIndex`, `scripts/postbuild.mjs`, bara i GitHub Actions):
   `.php` går alltid till Apache, så startsidan, som securityheaders.com betygsätter, får alla headers.
   Övriga sidor och statiska filer kan sakna headers så länge sajten ligger på webbhotellet; kontrollen

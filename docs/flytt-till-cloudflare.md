@@ -30,6 +30,9 @@ namnservrarna för christofferlilja.se och var sajten serveras.
 - [ ] Always Use HTTPS och HSTS på. Överväg HSTS preload när allt är stabilt.
 - [ ] Kontrollera att PR:er från forkar **inte** byggs automatiskt (repot tar emot topplist-PR:er).
 - [ ] Node-version och byggkommando som i CI (`npm run build`).
+- [ ] Alla headers i `scripts/security-headers.mjs` (även Cross-Origin-Opener-Policy och
+  Cross-Origin-Resource-Policy) skrivs till `_headers` av postbuild. Lägg inte in headers i Cloudflares
+  inställningar (Transform Rules) också, då finns de på två ställen.
 
 ## 3. Koden
 

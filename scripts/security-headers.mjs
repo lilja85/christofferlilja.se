@@ -9,6 +9,12 @@ export const securityHeaders = [
   ['X-Content-Type-Options', 'nosniff'],
   ['Referrer-Policy', 'strict-origin-when-cross-origin'],
   ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'],
+  // Andra fönster (som öppnar sidan eller öppnas av den) kommer inte åt den via window.opener
+  ['Cross-Origin-Opener-Policy', 'same-origin'],
+  // Andra webbplatser får inte bädda in sajtens filer (bilder, skript, CSS). Förhandsbilder i t.ex.
+  // LinkedIn påverkas inte, de hämtas av servrar. Cross-Origin-Embedder-Policy är medvetet utelämnad:
+  // den skulle stoppa bilder och videor från andra sajter i labbanteckningarna, utan att sajten behöver den.
+  ['Cross-Origin-Resource-Policy', 'same-origin'],
   [
     'Content-Security-Policy',
     [

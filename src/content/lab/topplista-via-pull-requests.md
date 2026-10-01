@@ -3,7 +3,7 @@ title: 'En topplista via pull requests i ett publikt repo'
 description: 'Hur påskäggsjaktens topplista fylls på med pull requests från främlingar, utan backend, och vad CI kan och inte kan kontrollera.'
 date: 2026-09-30
 tags: [devsecops, github-actions, säkerhet, påskägg, claude-code]
-draft: true
+draft: false
 ---
 
 <!--
@@ -16,8 +16,6 @@ När [påskäggsjakten](/lab/fran-php-till-astro-med-claude-code/) var klar vill
 ägg skulle få synas någonstans. Sidan är statisk och har ingen backend, så topplistan blev en JSON-fil i repot
 som fylls på med pull requests. Det betyder att främlingar ska kunna ändra i mitt publika repo, och det är
 där det blir intressant.
-
-> ✍️ **Fyll i:** Varför du ville ha en topplista, och varför det fick bli pull requests i stället för något enklare.
 
 ## Utgångsläget
 
@@ -127,16 +125,15 @@ skulle göra. Det var där det förvalda commit-meddelandet dök upp. Claude fö
 så att bara PR-titeln skulle behöva kontrolleras. Jag ville behålla vanliga merge-commits, och då blev
 kontrollen i stället att varje commit i PR:en ska följa formatet.
 
-> ✍️ **Fyll i:** Hur du tänkte kring att låta främlingar ändra i repot. Kändes det läskigt, eller var det just det som var poängen?
-
 ## Vad jag tar med mig
 
-> ✍️ **Fyll i:** Dina slutsatser. Till exempel: är en pull request en bra "databas" för sådant här?
-> Vad skulle du göra annorlunda om topplistan fick hundratals poster? Vilken av säkerhetsinställningarna
-> hade du missat utan att tänka på det?
+Det var intressant att  få labba med forks och PR. Det är inget jag funderat så mycket på tidigare eftersom
+alla projekt jag jobbat i tillhör en organisation och då litar man på anra i organisationen som har får rätt
+att pusha och annt.
 
 ## Nästa steg
 
 - Se hur det går när den första främlingen skickar en pull request.
 - Köra valideringsskriptet från `main` i stället för från PR:en, så att en PR inte kan ändra sin egen kontroll.
 - Beskriva rulesetet och Actions-inställningarna som kod, i stället för att klicka fram dem.
+- Kontrollera att forken inte kör och skapar test-sidor i Cloudflare Pages

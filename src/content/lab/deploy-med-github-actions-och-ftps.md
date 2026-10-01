@@ -224,8 +224,6 @@ force-push förbi mitt eget skydd, och så viktigt var det inte.
   som jag varken kan se eller ändra, och den ändrades, eller betedde sig annorlunda än jag trodde, utan att
   jag märkte det. En återkommande kontroll fångar det. En plattform där jag själv styr headers löser det.
 
-> ✍️ **Fyll i:** Stämmer resonemanget om *Required reviewers* ovan? Var går gränsen för när ett extra godkännande är värt besväret?
-
 ## Samarbetet med Claude Code
 
 Precis som i förra labben blev rollerna tydliga: jag klickade i DirectAdmin och GitHub, och Claude
@@ -241,15 +239,22 @@ securityheaders.com gav F. Därifrån gick felsökningen snabbt: Claude hittade 
 mönstret med filstorleken och att `.php` alltid gick via Apache. Jag lade upp testfilen i DirectAdmin och
 pratade med webbhotellet.
 
-> ✍️ **Fyll i:** Hur det kändes att ge en AI-agent i uppdrag att bygga något som får skriva till din produktionsmiljö.
-
-> ✍️ **Fyll i:** Hur det kändes när A+ blev F, och vad det betyder att säkerheten på sidan hängde på något hos webbhotellet som du inte kunde se.
+När vi testade och det blev A+, kanske för att vi testade Cloudflare Pages? Så blev det lite tråkigt när
+vi var tillbaka på F igen. Kanske inte hela världen men det kändes som det borde vara enkelt för i alla fall
+denna sida att nå A+. Begränsningen med webbhotellet är något man får leva med när man delar med andra,
+men alternativet att hyra en egen server är inte heller ett alternativ då det skulle bli mycket dyrare.
 
 ## Vad jag tar med mig
 
-> ✍️ **Fyll i:** Dina slutsatser. Till exempel: är "minsta behörighet" viktigare än "modernaste tekniken"?
-> Skulle du göra samma val i ett kunduppdrag? Vad hade du gjort om webbhotellet haft rsync?
-> Var det rätt att välja bort Cloudflare från början, nu när det blir Cloudflare ändå?
+Det är bra att fundera över säkerheten och göra egna aktiva val istället för att bara köra på standard. Sen
+om det inte går att komma hela vägen är det en sak, men då har man i alla fall gjort aktiva egna val och
+avvägningar. Som med allt i säkerhet, hur säkert ska det vara och vad är en lagom nivå?
+
+Att inte gå all in på Cloudflage var lite synd att jag inte gjorde, men då hade jag å andra sidan inte
+upptäckt den här bristen med headers. Anledningen att jag inte körde Cloudflare Pages var för att jag tolkade
+det som att jag skulle slå av DNSSEC helt, men nu verkar det bara temporärt under tiden man flyttar. Sen
+vet jag inte så mycket om Cloudflare Pages heller och då är ett gammalt hederligt webbhotell (som jag 
+dessutom måste motivera för mig själv varför jag betalar för) det "vettiga" valet.
 
 ## Nästa steg
 

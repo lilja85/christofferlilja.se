@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import avatar from '../assets/avatar.jpg';
 import { SITE, CONFIG, publicConfig } from '../site';
 import hallOfFame from '../data/hall-of-fame.json';
+import { securityHeaders } from '../../scripts/security-headers.mjs';
 import '../styles/retro.css';
 import '../styles/fx.css';
 
@@ -31,6 +32,19 @@ const labData = (await getCollection('lab', ({ data }) => !data.draft))
   .map((p) => ({ title: p.data.title, date: p.data.date.toISOString().slice(0, 10), url: `/lab/${p.id}/` }));
 
 const { features } = CONFIG;
+
+// Reservskydd om servern tappar headers (nginx framför Apache har gjort det): CSP och Referrer-Policy
+// som meta-taggar, från samma lista som headers. frame-ancestors gäller inte i meta och tas bort.
+// Bara i bygget, eftersom Astros dev-server lägger in egna skript.
+// JSON i <script>-taggar med < som \u003c: kan inte avsluta taggen i förtid, och inget i datan
+// (som git blame-påskäggets <?php-rad) kan tolkas som PHP när startsidan blir index.php
+const json = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
+
+const headerMap = new Map(securityHeaders);
+const metaCsp = import.meta.env.PROD
+  ? headerMap.get('Content-Security-Policy').split('; ').filter((d) => !d.startsWith('frame-ancestors')).join('; ')
+  : null;
+const metaReferrer = headerMap.get('Referrer-Policy');
 const showLab = features.lab && labData.length > 0;
 // 2008-temats header: en egen bild, eller null för en generisk header med namnet i text (src/styles/retro.css)
 const retroHeader = CONFIG.retro.headerImage;
@@ -40,6 +54,8 @@ const htmlStyle = retroHeader ? `--retro-header: url('${retroHeader}')` : undefi
 <html lang="sv" data-env={preview ? 'preview' : 'production'} data-retro-header={retroHeader ? 'image' : 'text'} style={htmlStyle}>
   <head>
     <meta charset="utf-8" />
+    {metaCsp && <meta http-equiv="Content-Security-Policy" content={metaCsp} />}
+    <meta name="referrer" content={metaReferrer} />
     {features.eggs && <Fragment set:html={'<!-- Hej, du som läser källkod! 👋 Tryck "." på sidan, prova ↑ ↑ ↓ ↓ ← → ← → B A, eller öppna konsolen. -->'} />}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
@@ -88,9 +104,9 @@ const htmlStyle = retroHeader ? `--retro-header: url('${retroHeader}')` : undefi
       <p>© {new Date().getFullYear()} {SITE.name}{features.eggs && <> <button type="button" id="egg-counter" class="egg-counter" hidden></button></>}</p>
     </footer>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-    <script type="application/json" id="site-config" set:html={JSON.stringify(publicConfig())} />
-    <script type="application/json" id="lab-data" set:html={JSON.stringify(features.lab ? labData : [])} />
-    {features.hallOfFame && <script type="application/json" id="hof-data" set:html={JSON.stringify(hallOfFame)} />}
+    <script type="application/json" id="site-config" set:html={json(publicConfig())} />
+    <script type="application/json" id="lab-data" set:html={json(features.lab ? labData : [])} />
+    {features.hallOfFame && <script type="application/json" id="hof-data" set:html={json(hallOfFame)} />}
   </body>
 </html>
 

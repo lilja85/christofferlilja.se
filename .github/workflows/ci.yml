@@ -68,6 +68,10 @@ jobs:
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
     steps:
+      # Koden behövs bara för headerkontrollen efter deployen (site.config.mjs och security-headers.mjs)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: dist
@@ -75,7 +79,7 @@ jobs:
 
       - name: Kontrollera artefakten
         run: |
-          test -f dist/index.html
+          test -f dist/index.html || test -f dist/index.php
           test -f dist/.htaccess
           grep -q 'Content-Security-Policy' dist/.htaccess || { echo 'Säkerhetsheaders saknas i .htaccess'; exit 1; }
           test ! -f dist/_headers
@@ -127,3 +131,19 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -p $DEPLOY_PORT -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
             dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
           rm -f ~/.ssh/deploy_key
+
+      # GET mot den publicerade sajten, inte HEAD: nginx framför Apache kan svara själv på GET för
+      # statiska filer och då kommer inga headers från .htaccess med (se scripts/check-live-headers.mjs).
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: env.DRY_RUN != 'true'
+        with:
+          node-version: 24
+      - name: Kontrollera säkerhetsheaders på sajten
+        if: env.DRY_RUN != 'true'
+        run: |
+          for i in 1 2 3; do
+            node scripts/check-live-headers.mjs && exit 0
+            echo "Försök $i misslyckades, väntar 20 s"
+            sleep 20
+          done
+          exit 1

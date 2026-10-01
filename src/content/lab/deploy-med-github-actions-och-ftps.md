@@ -184,7 +184,8 @@ jobba så längre. Nu är `main` skyddad och allt går via pull requests:
 
 1. En branch, till exempel `feature/paskaggsjakt`.
 2. En pull request. CI bygger, och Cloudflare lägger en förhandsvisning i PR:en.
-3. Merge när förhandsvisningen ser bra ut, och då deployas ändringen till produktion.
+3. Merge när förhandsvisningen ser bra ut.
+4. Godkänn deployen. Först då går ändringen ut i produktion.
 
 Skyddet ligger på två nivåer. På **GitHub** finns en ruleset för `main` som kräver pull request och
 godkänt CI-bygge och blockerar force-push och radering. Och eftersom jag jobbar med en AI-agent har även
@@ -206,8 +207,9 @@ force-push förbi mitt eget skydd, och så viktigt var det inte.
   som bara når `public_html` begränsar skadan om något läcker.
 - **Transporten är krypterad och servern verifieras.** TLS krävs för både inloggning och data, och
   certifikatet kontrolleras, så ingen kan låtsas vara servern.
-- **Secrets i en skyddad miljö.** Uppgifterna finns bara i `production`, som bara `main` får använda. Man kan
-  också kräva manuellt godkännande före varje deploy.
+- **Secrets i en skyddad miljö.** Uppgifterna finns bara i `production`, som bara `main` får använda. Miljön
+  har dessutom *Required reviewers* med mig som granskare: deploy-jobbet väntar tills jag godkänt det, även
+  efter en merge. En merge räcker alltså inte för att något ska nå produktionen.
 - **Synk med radering städar bort gammal skuld.** Den gamla PHP-sidans rester (testfiler, gamla
   inkluderingsfiler, statistikkatalog) försvann vid första deployen.
 - **Främlingar i CI.** Eftersom topplistan fylls på med pull requests från forkar kräver repot godkännande
@@ -222,7 +224,7 @@ force-push förbi mitt eget skydd, och så viktigt var det inte.
   som jag varken kan se eller ändra, och den ändrades, eller betedde sig annorlunda än jag trodde, utan att
   jag märkte det. En återkommande kontroll fångar det. En plattform där jag själv styr headers löser det.
 
-> ✍️ **Fyll i:** Slog du på "Required reviewers" på miljön, och varför eller varför inte?
+> ✍️ **Fyll i:** Varför du slog på *Required reviewers*, och om det känns som en extra spärr eller som ett irritationsmoment.
 
 ## Samarbetet med Claude Code
 
@@ -252,8 +254,7 @@ pratade med webbhotellet.
 ## Nästa steg
 
 - Flytta produktionen till Cloudflare Pages: namnservrar och DNSSEC, e-posten som ligger kvar hos webbhotellet,
-  och bort med `index.php`-lösningen. Det blir en egen labbanteckning.
-- Slå på *Required reviewers* på miljön `production` om det inte redan är gjort.
+  och bort med `index.php`-lösningen. Det blir en [egen labbanteckning](/lab/flytt-till-cloudflare-pages/).
 - Beskriva rulesetet för `main` som kod, till exempel med Terraforms GitHub-provider, i stället för att klicka fram det.
 - Kontrollera att PR:er från forks inte byggs automatiskt på Cloudflare, eftersom repot är publikt.
 - Peka om liljaonline.se hit.

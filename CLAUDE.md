@@ -87,9 +87,12 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 ## Git
 
 - Committa med `git -c user.name="Christoffer Lilja" -c user.email="christoffer.lilja@gmail.com"`.
-  Den globala git-konfigurationen har jobbadressen.
+  Den globala git-konfigurationen har jobbadressen. Repot har därför `user.email` satt lokalt (gmail), men en
+  ny klon saknar det: kontrollera med `git config user.email` innan första commit, så att jobbadressen inte
+  hamnar i det publika repot.
 - **`main` är skyddad.** Allt går via branch → pull request → förhandsvisning på Cloudflare → merge.
-  Merge till `main` deployar till produktion. Direktpush och force-push till `main` blockeras av en
+  Merge till `main` deployar till produktion, efter att Christoffer godkänt deployen (*Required reviewers* på
+  miljön `production`). Direktpush och force-push till `main` blockeras av en
   ruleset på GitHub och av `permissions.deny` i `.claude/settings.json`. Försök inte gå runt dem.
 - Branchnamn: `feature/…` för nytt, `fix/…` för buggar, `chore/…` för underhåll och dokumentation.
 - **Commit-meddelanden följer [Conventional Commits](https://www.conventionalcommits.org/sv/v1.0.0/):**
@@ -111,12 +114,13 @@ Windows: saknas `node` i PATH, lägg till `C:\Program Files\nodejs`.
 
 - **Två miljöer:** produktion = webbhotellet (GitHub Actions + FTPS från `main`). Förhandsvisning =
   Cloudflare Pages, som bygger alla branches och PR:er med `noindex` och lägger preview-URL:en i PR:en.
-  Arbetsflöde för större ändringar: branch → PR → granska previewn → merge (som deployar).
+  Arbetsflöde för större ändringar: branch → PR → granska previewn → merge → godkänn deployen.
 - `Base.astro` läser `CF_PAGES`, `CF_PAGES_BRANCH` och `CF_PAGES_COMMIT_SHA` vid bygget. På Cloudflare visas en gul
   banner (branch, commit, länk till produktionen) och `<html data-env="preview">`. Terminalen använder `data-env`
   (`git remote -v`, `open preview|production`, `uname`).
 
-- **Push till `main` deployar direkt** till produktion. Före ändringar som tar bort eller flyttar filer:
+- **Deploy-jobbet väntar på godkännande** (*Required reviewers* på miljön `production`, Christoffer är granskare)
+  innan det körs. Godkänn i Actions-körningen efter merge. Före ändringar som tar bort eller flyttar filer:
   kör workflowen manuellt (`workflow_dispatch`, `dry_run` förvalt) och granska listan först.
 - Produktion använder **FTPS** (`DEPLOY_METHOD=ftps`) med ett FTP-konto som bara når `public_html`.
   SSH finns på webbhotellet men utan rsync, och SFTP fungerar bara med huvudkontot, som når allt. SSH-grenen i

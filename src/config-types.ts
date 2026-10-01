@@ -6,6 +6,7 @@ export interface SiteConfig {
     repo: string;
     previewUrl: string | null;
     launched: string;
+    phpIndex?: boolean;
   };
   person: {
     name: string;

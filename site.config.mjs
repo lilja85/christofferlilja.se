@@ -15,6 +15,10 @@ export default {
     previewUrl: 'https://christofferlilja-se.pages.dev',
     // Dagen sajten (och påskäggsjakten) gick live. Topplisteposter före det här datumet avvisas.
     launched: '2026-09-28',
+    // Webbhotell med nginx framför Apache: startsidan blir index.php så att den alltid går via Apache och
+    // får säkerhetsheaders från .htaccess (nginx svarar annars själv på större statiska filer, utan headers).
+    // Kräver PHP på webbhotellet. Påverkar inte förhandsvisningar på Cloudflare Pages.
+    phpIndex: true,
   },
 
   person: {

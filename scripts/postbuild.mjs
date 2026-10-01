@@ -3,6 +3,7 @@
 // - Cloudflare Pages (förhandsvisningar, CF_PAGES=1): dist/_headers med noindex, och ingen .htaccess
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { securityHeaders, textFiles } from './security-headers.mjs';
+import siteConfig from '../site.config.mjs';
 
 const MARKER = '# @security-headers';
 const htaccess = new URL('../dist/.htaccess', import.meta.url);
@@ -34,4 +35,18 @@ if (process.env.CF_PAGES) {
   writeFileSync(htaccess, source.replace(MARKER, block));
   if (existsSync(headersFile)) rmSync(headersFile);
   console.log('postbuild: webbhotell, skrev säkerhetsheaders till dist/.htaccess');
+
+  // Startsidan som index.php (site.phpIndex): nginx framför Apache svarar själv på större statiska filer
+  // utan headers, men .php går alltid till Apache. Utan PHP-kod i filen skickar PHP ut HTML:en som den är.
+  // Bara i GitHub Actions (bygget som deployas), så att npm run preview lokalt har kvar index.html.
+  if (siteConfig.site.phpIndex && process.env.GITHUB_ACTIONS) {
+    const index = new URL('../dist/index.html', import.meta.url);
+    const html = readFileSync(index, 'utf8');
+    if (html.includes('<?')) {
+      throw new Error('dist/index.html innehåller "<?", som PHP skulle köra. Skriv < som &lt; eller \\u003c.');
+    }
+    writeFileSync(new URL('../dist/index.php', import.meta.url), html);
+    rmSync(index);
+    console.log('postbuild: startsidan blev dist/index.php (site.phpIndex)');
+  }
 }

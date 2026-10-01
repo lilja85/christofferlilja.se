@@ -79,7 +79,7 @@ jobs:
 
       - name: Kontrollera artefakten
         run: |
-          test -f dist/index.html
+          test -f dist/index.html || test -f dist/index.php
           test -f dist/.htaccess
           grep -q 'Content-Security-Policy' dist/.htaccess || { echo 'Säkerhetsheaders saknas i .htaccess'; exit 1; }
           test ! -f dist/_headers

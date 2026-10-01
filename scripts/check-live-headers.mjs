@@ -17,11 +17,15 @@ async function get(path) {
 // har små filer gått via Apache och större direkt via nginx, så en liten fil kan dölja felet.
 const start = await get('/');
 const paths = ['/', '/lab/', '/humans.txt'];
+// Måste ha headers. Övriga varnar bara: på webbhotellet svarar nginx själv på större statiska filer utan
+// headers och det går inte att ändra på ett delat webbhotell. Startsidan går via Apache som index.php.
+const REQUIRED = ['/', '/humans.txt'];
 for (const m of start.body.matchAll(/(?:src|href)="(\/(?:js|_astro)\/[^"]+\.(?:js|css))"/g)) {
   if (!paths.includes(m[1])) paths.push(m[1]);
 }
 
 let failed = 0;
+let warned = 0;
 for (const path of paths) {
   const { res } = path === '/' ? start : await get(path);
   const problems = [];
@@ -31,17 +35,22 @@ for (const path of paths) {
     if (got === null) problems.push(`saknar ${name}`);
     else if (got !== value) problems.push(`${name} har fel värde: ${got}`);
   }
-  if (problems.length) {
+  if (problems.length && REQUIRED.includes(path)) {
     failed++;
     console.log(`✗ ${path}\n    ${problems.join('\n    ')}`);
+  } else if (problems.length) {
+    warned++;
+    console.log(`⚠ ${path} (${problems.length} saknas, varning)`);
   } else {
     console.log(`✓ ${path}`);
   }
 }
 
 if (failed) {
-  console.log(`\n${failed} av ${paths.length} adresser saknar säkerhetsheaders på ${base}.`);
+  console.log(`\n${failed} av ${REQUIRED.length} obligatoriska adresser saknar säkerhetsheaders på ${base}.`);
   console.log('Kontrollera med GET: curl -sD - -o /dev/null <url> (curl -I gör HEAD och kan ge ett annat svar).');
   process.exit(1);
 }
-console.log(`\nAlla ${paths.length} adresser skickar säkerhetsheaders.`);
+console.log(warned
+  ? `\nStartsidan har säkerhetsheaders. ${warned} andra adresser saknar dem (varning).`
+  : `\nAlla ${paths.length} adresser skickar säkerhetsheaders.`);

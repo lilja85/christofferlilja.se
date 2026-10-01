@@ -36,6 +36,10 @@ const { features } = CONFIG;
 // Reservskydd om servern tappar headers (nginx framför Apache har gjort det): CSP och Referrer-Policy
 // som meta-taggar, från samma lista som headers. frame-ancestors gäller inte i meta och tas bort.
 // Bara i bygget, eftersom Astros dev-server lägger in egna skript.
+// JSON i <script>-taggar med < som \u003c: kan inte avsluta taggen i förtid, och inget i datan
+// (som git blame-påskäggets <?php-rad) kan tolkas som PHP när startsidan blir index.php
+const json = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
+
 const headerMap = new Map(securityHeaders);
 const metaCsp = import.meta.env.PROD
   ? headerMap.get('Content-Security-Policy').split('; ').filter((d) => !d.startsWith('frame-ancestors')).join('; ')
@@ -100,9 +104,9 @@ const htmlStyle = retroHeader ? `--retro-header: url('${retroHeader}')` : undefi
       <p>© {new Date().getFullYear()} {SITE.name}{features.eggs && <> <button type="button" id="egg-counter" class="egg-counter" hidden></button></>}</p>
     </footer>
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-    <script type="application/json" id="site-config" set:html={JSON.stringify(publicConfig())} />
-    <script type="application/json" id="lab-data" set:html={JSON.stringify(features.lab ? labData : [])} />
-    {features.hallOfFame && <script type="application/json" id="hof-data" set:html={JSON.stringify(hallOfFame)} />}
+    <script type="application/json" id="site-config" set:html={json(publicConfig())} />
+    <script type="application/json" id="lab-data" set:html={json(features.lab ? labData : [])} />
+    {features.hallOfFame && <script type="application/json" id="hof-data" set:html={json(hallOfFame)} />}
   </body>
 </html>
 

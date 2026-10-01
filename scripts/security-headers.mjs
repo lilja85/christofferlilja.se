@@ -1,6 +1,8 @@
 // Säkerhetsheaders för sajten, på ett ställe.
 // scripts/postbuild.mjs skriver dem till dist/.htaccess (produktion på webbhotellet)
 // eller till dist/_headers (förhandsvisningar på Cloudflare Pages). Ändra dem här, inte i .htaccess.
+// CSP:n (utan frame-ancestors) och Referrer-Policy hamnar dessutom som meta-taggar i src/layouts/Base.astro,
+// som reservskydd om webbhotellet skulle skicka sidor utan headers.
 
 export const securityHeaders = [
   ['Strict-Transport-Security', 'max-age=31536000; includeSubDomains'],
